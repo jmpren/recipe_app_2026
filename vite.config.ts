@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Recipe Book',
-        short_name: 'Recipes',
+        name: 'Butcher Block',
+        short_name: 'Butcher Block',
         description: 'A personal recipe book, with riffs.',
         theme_color: '#3F5B44',
         background_color: '#FAF7F1',

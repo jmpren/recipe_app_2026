@@ -38,7 +38,7 @@ export function Login() {
   return (
     <div className="rb-center">
       <div className="rb-card">
-        <h1>Recipe Book</h1>
+        <h1>Butcher Block</h1>
 
         {status === 'sent' ? (
           <p className="rb-muted">
