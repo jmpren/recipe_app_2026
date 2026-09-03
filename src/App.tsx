@@ -1,8 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './auth/RequireAuth'
 import { AuthCallback } from './routes/AuthCallback'
-import { Home } from './routes/Home'
 import { Login } from './routes/Login'
+import { RecipeDetail } from './routes/RecipeDetail'
+import { RecipeList } from './routes/RecipeList'
+import { RecipeNew } from './routes/RecipeNew'
 
 export default function App() {
   return (
@@ -10,7 +13,11 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<Home />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<RecipeList />} />
+          <Route path="/recipes/new" element={<RecipeNew />} />
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -21,6 +21,21 @@ entries; only functions containing actual logic do.
 
 ## Postgres Functions (RPC)
 
+### `create_recipe`
+**Status:** implemented (Phase 1)
+**Purpose:** Adds a recipe in one transaction — inserts the `recipes` row plus its
+`recipe_ingredients` and `recipe_steps`, then writes the mandatory `is_original`
+snapshot to `recipe_versions`. Exists as a function so no client can create a
+recipe that is missing its original version (PLAN.md §3/§5). `security invoker`,
+so RLS applies; `owner_id` is forced to `auth.uid()`.
+**Input:** `payload jsonb` —
+`{ id?, title, description?, source_url?, source_name?, image_url?, servings?,
+prep_minutes?, cook_minutes?, ingredients: [{ position?, quantity?, unit?, name, notes? }],
+steps: [{ position?, instruction, note? }] }`. Ingredient rows with a blank `name`
+and step rows with a blank `instruction` are dropped; `position` defaults to array
+order. Raises on missing `title` or no auth.
+**Output:** the created `recipes` row.
+
 ### `log_cook`
 **Status:** planned (Phase 1)
 **Purpose:** Records a cook and returns the new cook_log row. Exists as a function
