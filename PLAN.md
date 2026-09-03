@@ -233,7 +233,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 - [x] Favorites bias + "don't repeat within X weeks" (reads `cook_logs` history)
       — `suggest_meals(exclude_weeks, limit_count)` RPC + a "What to cook" page.
       "Favorite" is derived from `cook_logs.rating` (no stored flag).
-- [ ] Meal-day assignment + basic calendar view
+- [x] Meal-day assignment + basic calendar view — `meal_plan_entries` table +
+      `plan_meal` RPC; week view at `/plan` (day + slot, slot defaults to
+      dinner), plus "Add to plan" on the recipe detail page. Per-user;
+      collaboration is Phase 3.
 - [ ] Shopping list generated from a set of selected recipes
 - [ ] Tags/filtering (introduce once real usage patterns exist)
 - [ ] Camera scan → OCR → editable recipe form

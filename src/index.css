@@ -578,6 +578,149 @@ textarea.rb-field {
   border-radius: 8px;
 }
 
+/* --- meal plan / calendar --- */
+
+.rb-week-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.rb-week-nav .rb-button {
+  padding: 8px 12px;
+}
+
+.rb-plan {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rb-plan-day {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.rb-plan-day.is-today {
+  border-color: var(--sage);
+}
+
+.rb-plan-day__label {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  padding-top: 2px;
+}
+
+.rb-plan-day__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rb-plan-empty {
+  font-size: 14px;
+}
+
+.rb-plan-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.rb-slot-tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: var(--sage-dark);
+  background: color-mix(in srgb, var(--gold) 22%, var(--paper-raised));
+}
+
+.rb-icon-button--sm {
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+}
+
+.rb-plan-add-btn {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 13px;
+  color: var(--sage);
+  background: transparent;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.rb-plan-add-btn:hover {
+  text-decoration: underline;
+}
+
+.rb-plan-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.rb-plan-picker__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rb-plan-picker__controls .rb-field[type='search'] {
+  flex: 1 1 160px;
+}
+
+.rb-plan-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rb-plan-add-line {
+  margin: 0;
+}
+
+.rb-plan-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rb-plan-add .rb-field {
+  width: auto;
+}
+
+@media (max-width: 520px) {
+  .rb-plan-day {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
 /* In cooking mode the step card has no padding of its own — inset the note UI
    so it lines up with the step text. */
 .rb-cook-step__notes {

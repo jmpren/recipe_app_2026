@@ -114,6 +114,24 @@ usage patterns exist — table exists from Phase 0 but unused until then.
 | recipe_tags | recipe_id | uuid | References `recipes.id` |
 | recipe_tags | tag_id | uuid | References `tags.id` |
 
+## meal_plan_entries
+A recipe assigned to a day + meal slot (Phase 2 calendar). Per-user for now;
+Phase 3 makes meal planning collaborative (a policy change, not a reshape).
+
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid | Primary key |
+| user_id | uuid | References `profiles.id`. RLS scopes all access to this. |
+| recipe_id | uuid | References `recipes.id`; `ON DELETE CASCADE` |
+| planned_on | date | The day |
+| slot | text | `breakfast` / `lunch` / `dinner` / `snack`, defaults to `dinner` (check constraint) |
+| position | int | Order within the same day + slot (append via `plan_meal`) |
+| created_at | timestamptz | |
+
+Index on `(user_id, planned_on)` for week reads. Rows are added via the
+`plan_meal` RPC (forces `user_id`, appends `position`) and removed with a plain
+delete.
+
 ## Storage
 
 ### Bucket: `recipe-photos`

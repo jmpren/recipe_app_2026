@@ -79,6 +79,18 @@ cook), `created_by` forced to `auth.uid()`. Raises on no auth, missing
 `cook_log_id`, blank `label`, or a `cook_log_id` the caller can't see.
 **Output:** the created `recipe_riffs` row
 
+### `plan_meal`
+**Status:** implemented (Phase 2)
+**Purpose:** Adds a recipe to a day on the meal calendar (`meal_plan_entries`).
+Exists as a function so `user_id` is forced to `auth.uid()` and `position` is
+appended server-side. `security invoker`.
+**Input:** `recipe_id uuid` (required), `planned_on date` (required),
+`slot text` (default `'dinner'`; must be `breakfast`/`lunch`/`dinner`/`snack`).
+Raises on no auth, missing `recipe_id`/`planned_on`, a bad `slot`, or a
+`recipe_id` the caller can't see.
+**Output:** the created `meal_plan_entries` row.
+**Removal / reads** are plain table ops (RLS-scoped), no contract entry.
+
 ### `promote_riff_to_version`
 **Status:** planned (Phase 1)
 **Purpose:** Takes a riff and creates a new permanent `recipe_versions` entry from

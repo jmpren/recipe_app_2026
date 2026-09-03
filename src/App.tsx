@@ -4,6 +4,7 @@ import { RequireAuth } from './auth/RequireAuth'
 import { AuthCallback } from './routes/AuthCallback'
 import { CookingMode } from './routes/CookingMode'
 import { Login } from './routes/Login'
+import { MealPlan } from './routes/MealPlan'
 import { RecipeCookLog } from './routes/RecipeCookLog'
 import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
@@ -20,6 +21,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<RecipeList />} />
           <Route path="/suggestions" element={<Suggestions />} />
+          <Route path="/plan" element={<MealPlan />} />
           <Route path="/recipes/new" element={<RecipeNew />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeEdit />} />
