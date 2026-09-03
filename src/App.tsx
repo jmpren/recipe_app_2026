@@ -3,8 +3,8 @@ import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './auth/RequireAuth'
 import { AuthCallback } from './routes/AuthCallback'
 import { CookingMode } from './routes/CookingMode'
+import { Home } from './routes/Home'
 import { Login } from './routes/Login'
-import { MealPlan } from './routes/MealPlan'
 import { RecipeCookLog } from './routes/RecipeCookLog'
 import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
@@ -20,10 +20,12 @@ export default function App() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<RecipeList />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/recipes" element={<RecipeList />} />
           <Route path="/suggestions" element={<Suggestions />} />
-          <Route path="/plan" element={<MealPlan />} />
           <Route path="/shopping" element={<ShoppingList />} />
+          {/* /plan was the calendar's old home; it's the home screen now */}
+          <Route path="/plan" element={<Navigate to="/" replace />} />
           <Route path="/recipes/new" element={<RecipeNew />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeEdit />} />

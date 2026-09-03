@@ -185,8 +185,8 @@ export function CookingMode() {
     return (
       <div className="rb-cook">
         <p className="rb-muted">That recipe doesn’t exist.</p>
-        <Link className="rb-button rb-button--ghost" to="/">
-          Back to recipes
+        <Link className="rb-button rb-button--ghost" to="/recipes">
+          Recipe book
         </Link>
       </div>
     )

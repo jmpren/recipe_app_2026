@@ -14,11 +14,30 @@ function cardMeta(r: Recipe): string {
     .join(' · ')
 }
 
-/** One recipe tile in a `.rb-grid`. Shared by the list and suggestions pages. */
-export function RecipeCard({ recipe, tags }: { recipe: Recipe; tags?: Tag[] }) {
+/** Where a recipe tile was opened from, so the detail page's back arrow can
+ *  return there (see RecipeDetail). */
+export interface RecipeCardOrigin {
+  to: string
+  label: string
+}
+
+/** One recipe tile in a `.rb-grid`. `from` sets the detail page's back target. */
+export function RecipeCard({
+  recipe,
+  tags,
+  from,
+}: {
+  recipe: Recipe
+  tags?: Tag[]
+  from?: RecipeCardOrigin
+}) {
   const meta = cardMeta(recipe)
   return (
-    <Link to={`/recipes/${recipe.id}`} className="rb-recipe-card">
+    <Link
+      to={`/recipes/${recipe.id}`}
+      state={from ? { backTo: from.to, backLabel: from.label } : undefined}
+      className="rb-recipe-card"
+    >
       <div className="rb-recipe-card__media">
         {recipe.image_url ? (
           <img src={recipe.image_url} alt="" loading="lazy" />

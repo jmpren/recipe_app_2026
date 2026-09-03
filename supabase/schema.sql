@@ -616,6 +616,31 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- RPC: top_rated_recipes(limit_count int) -> setof recipes
+-- Deterministic "Top rated" for the home screen: recipes with >= 1 cook rating,
+-- ordered by average rating (then count, then newest). stable, security
+-- invoker. See docs/API_CONTRACT.md and the …_top_rated_recipes_rpc.sql migration.
+-- ---------------------------------------------------------------------------
+create or replace function public.top_rated_recipes(limit_count int default 6)
+returns setof public.recipes
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  select r.*
+  from public.recipes r
+  join (
+    select recipe_id, avg(rating) as avg_rating, count(rating) as n
+    from public.cook_logs
+    where rating is not null
+    group by recipe_id
+  ) cs on cs.recipe_id = r.id
+  order by cs.avg_rating desc, cs.n desc, r.created_at desc
+  limit greatest(coalesce(limit_count, 6), 0);
+$$;
+
+-- ---------------------------------------------------------------------------
 -- RPC: plan_meal(recipe_id uuid, planned_on date, slot text) -> meal_plan_entries
 -- Adds a recipe to a day. Forces user_id = auth.uid(); slot defaults to
 -- 'dinner'; position appends within that day + slot. security invoker. See

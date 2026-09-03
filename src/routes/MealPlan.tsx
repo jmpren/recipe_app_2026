@@ -181,7 +181,12 @@ export function MealPlan() {
                   {dayEntries.map((e) => (
                     <div key={e.id} className="rb-plan-entry">
                       {e.slot !== 'dinner' && <span className="rb-slot-tag">{e.slot}</span>}
-                      <Link to={`/recipes/${e.recipe.id}`}>{e.recipe.title}</Link>
+                      <Link
+                        to={`/recipes/${e.recipe.id}`}
+                        state={{ backTo: '/', backLabel: 'Meal plan' }}
+                      >
+                        {e.recipe.title}
+                      </Link>
                       <button
                         type="button"
                         className="rb-icon-button rb-icon-button--sm"

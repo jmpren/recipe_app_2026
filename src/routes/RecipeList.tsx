@@ -72,7 +72,7 @@ export function RecipeList() {
   return (
     <div className="rb-stack">
       <div className="rb-list-head">
-        <h1>Recipes</h1>
+        <h1>Recipe Book</h1>
         <input
           className="rb-field"
           type="search"
@@ -131,7 +131,11 @@ export function RecipeList() {
         <ul className="rb-grid">
           {shown.map((r) => (
             <li key={r.id}>
-              <RecipeCard recipe={r} tags={tagMap.get(r.id)} />
+              <RecipeCard
+                recipe={r}
+                tags={tagMap.get(r.id)}
+                from={{ to: '/recipes', label: 'Recipe Book' }}
+              />
             </li>
           ))}
         </ul>

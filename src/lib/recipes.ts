@@ -50,6 +50,13 @@ export async function suggestMeals(excludeWeeks: number, limitCount = 6): Promis
   return (data as Recipe[] | null) ?? []
 }
 
+/** Recipes with the highest average cook rating — the home screen's "Top rated". */
+export async function topRatedRecipes(limitCount = 6): Promise<Recipe[]> {
+  const { data, error } = await supabase.rpc('top_rated_recipes', { limit_count: limitCount })
+  if (error) throw error
+  return (data as Recipe[] | null) ?? []
+}
+
 export async function getRecipe(id: string): Promise<RecipeWithDetail | null> {
   const { data, error } = await supabase
     .from('recipes')

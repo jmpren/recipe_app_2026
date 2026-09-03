@@ -165,6 +165,13 @@ Open app → Browse/search recipes → Add a recipe (scratch or paste URL)
          → [no changes → done]  OR  [changes → save as a riff]
 ```
 
+**Navigation (post-Phase-2 restructure):** the **home screen** is this week's
+meal-day calendar with a "Top rated" recipe strip below it. The full recipe
+collection ("Recipe Book") is its own screen. A persistent top tab bar
+(Home · Recipe Book · Shopping · Ideas) is visible on every screen incl. recipe
+detail. The recipe detail page has a contextual back link that returns to
+wherever it was opened from (calendar day / recipe book / top-rated / ideas).
+
 Key rules locked in during planning:
 - **Riffs are only ever created retrospectively**, immediately after logging a cook —
   never as a speculative/blank entry.

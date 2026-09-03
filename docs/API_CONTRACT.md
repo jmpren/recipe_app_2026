@@ -158,6 +158,15 @@ so repeated calls rotate rather than repeat; tie-break on least-recently-cooked.
 "Favorite" is derived from rating history — there is no stored favorite flag.
 **Output:** up to `limit_count` `recipes` rows, best-fit first.
 
+### `top_rated_recipes`
+**Status:** implemented (Phase 2)
+**Purpose:** The home screen's "Top rated" strip. Recipes that have at least one
+cook rating, ordered by `avg(cook_logs.rating)` desc, then rating count, then
+newest. Deterministic (unlike `suggest_meals`). `stable`, `security invoker` —
+RLS makes it per-user.
+**Input:** `limit_count int` (default 6, clamped `>= 0`).
+**Output:** `recipes` rows, best first.
+
 ### `predicted_servings`
 **Status:** implemented (Phase 2)
 **Purpose:** After a recipe has enough logged cooks, returns a suggested servings

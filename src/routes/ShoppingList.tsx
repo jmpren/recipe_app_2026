@@ -141,8 +141,8 @@ export function ShoppingList() {
       {selected.size === 0 ? (
         <div className="rb-empty">
           <p className="rb-muted">Pick a few recipes above to build a combined list.</p>
-          <Link to="/" className="rb-button rb-button--ghost">
-            Browse recipes
+          <Link to="/recipes" className="rb-button rb-button--ghost">
+            Browse the recipe book
           </Link>
         </div>
       ) : lines === null ? (

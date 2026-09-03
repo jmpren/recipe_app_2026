@@ -43,7 +43,7 @@ export function AddToPlan({ recipeId }: { recipeId: string }) {
         {added && (
           <span className="rb-muted">
             {' '}
-            Added for {added}. <Link to="/plan">View plan</Link>
+            Added for {added}. <Link to="/">View plan</Link>
           </span>
         )}
         {error && <span className="rb-error"> {error}</span>}

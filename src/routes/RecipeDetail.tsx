@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AddToPlan } from '../components/AddToPlan'
 import { StepNoteEditor } from '../components/StepNoteEditor'
 import { TagEditor } from '../components/TagEditor'
@@ -32,6 +32,12 @@ export function RecipeDetail() {
   const [riffsOpen, setRiffsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Where the user came from — set by whoever linked here (RecipeCard `from`, a
+  // calendar-day link, …). Falls back to the recipe book on a fresh load.
+  const navState = useLocation().state as { backTo?: string; backLabel?: string } | null
+  const backTo = navState?.backTo ?? '/recipes'
+  const backLabel = navState?.backLabel ?? 'Recipe Book'
 
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original')
   const [converted, setConverted] = useState<Partial<Record<'metric' | 'imperial', ConvertedAmount[]>>>({})
@@ -106,15 +112,19 @@ export function RecipeDetail() {
     }
   }, [unitSystem, converted, recipe])
 
+  const backLink = (
+    <Link to={backTo} className="rb-detail-back">
+      <span aria-hidden="true">←</span> {backLabel}
+    </Link>
+  )
+
   if (error) return <p className="rb-error">{error}</p>
   if (recipe === undefined) return <p className="rb-muted">Loading…</p>
   if (recipe === null) {
     return (
       <div className="rb-stack">
+        {backLink}
         <p className="rb-muted">That recipe doesn’t exist.</p>
-        <Link to="/" className="rb-button rb-button--ghost">
-          Back to recipes
-        </Link>
       </div>
     )
   }
@@ -190,6 +200,8 @@ export function RecipeDetail() {
 
   return (
     <article className="rb-stack">
+      {backLink}
+
       {recipe.image_url && (
         <img className="rb-detail-hero" src={recipe.image_url} alt="" />
       )}

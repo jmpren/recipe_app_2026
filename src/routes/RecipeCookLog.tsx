@@ -154,8 +154,8 @@ export function RecipeCookLog() {
     return (
       <div className="rb-stack">
         <p className="rb-muted">That recipe doesn’t exist.</p>
-        <Link to="/" className="rb-button rb-button--ghost">
-          Back to recipes
+        <Link to="/recipes" className="rb-button rb-button--ghost">
+          Recipe book
         </Link>
       </div>
     )

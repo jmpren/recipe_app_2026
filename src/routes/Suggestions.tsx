@@ -78,15 +78,15 @@ export function Suggestions() {
             Nothing to suggest right now — add more recipes, or widen the window above. Once
             you’ve rated a few cooks, your favorites float to the top here.
           </p>
-          <Link to="/" className="rb-button rb-button--ghost">
-            Back to recipes
+          <Link to="/recipes" className="rb-button rb-button--ghost">
+            Browse the recipe book
           </Link>
         </div>
       ) : (
         <ul className="rb-grid">
           {recipes.map((r) => (
             <li key={r.id}>
-              <RecipeCard recipe={r} />
+              <RecipeCard recipe={r} from={{ to: '/suggestions', label: 'Ideas' }} />
             </li>
           ))}
         </ul>
