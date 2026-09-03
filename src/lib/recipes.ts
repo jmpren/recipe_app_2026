@@ -117,9 +117,18 @@ export function draftToPayload(draft: RecipeDraft) {
   }
 }
 
-export async function createRecipe(draft: RecipeDraft, photo: File | null): Promise<Recipe> {
+/**
+ * @param fallbackImageUrl used as `image_url` when the user didn't upload a
+ *        photo — e.g. the cover image found by the URL importer. A remote URL in
+ *        this text column is fine for `<img src>`; no copy into our bucket.
+ */
+export async function createRecipe(
+  draft: RecipeDraft,
+  photo: File | null,
+  fallbackImageUrl: string | null = null,
+): Promise<Recipe> {
   const id = crypto.randomUUID()
-  const image_url = photo ? await uploadRecipePhoto(id, photo) : null
+  const image_url = photo ? await uploadRecipePhoto(id, photo) : fallbackImageUrl
 
   const { data, error } = await supabase.rpc('create_recipe', {
     payload: { id, image_url, ...draftToPayload(draft) },

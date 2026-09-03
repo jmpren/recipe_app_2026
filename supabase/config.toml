@@ -384,6 +384,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Fetches a URL and extracts a schema.org Recipe. verify_jwt keeps it from being
+# an open fetch proxy — the PWA calls it with the signed-in user's token.
+[functions.import-recipe-from-url]
+enabled = true
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

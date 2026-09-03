@@ -106,13 +106,25 @@ makes N servings" nudge.
 ## Edge Functions
 
 ### `import-recipe-from-url`
-**Status:** planned (Phase 1)
-**Purpose:** Fetches a given URL, looks for schema.org Recipe JSON-LD structured
-data, and returns parsed title/ingredients/steps/servings/image if found. Falls
-back to returning just the URL if no structured data exists — client always shows
-an editable form either way, pre-filled or blank.
-**Input:** `{ url: string }`
-**Output:** `{ found: boolean, title?, description?, ingredients?, steps?, servings?, image_url? }`
+**Status:** implemented (Phase 1)
+**Purpose:** Fetches a given URL, looks for a schema.org `Recipe` in the page's
+JSON-LD (`<script type="application/ld+json">`, including `@graph` wrappers), and
+returns parsed fields. Returns `{ found: false }` when there's no structured
+data, the fetch fails, or the page can't be read — the client always shows an
+editable form either way, pre-filled or blank.
+**Auth:** `verify_jwt = true` — call it as a signed-in user (the PWA does this
+automatically via `supabase.functions.invoke`).
+**Input:** `{ url: string }` — must be `http(s)`; localhost / private-range hosts
+are rejected (`400`).
+**Output:** `{ found: boolean, title?: string, description?: string,
+ingredients?: { quantity: number | null, unit: string | null, name: string, notes: string | null }[],
+steps?: string[], servings?: number | null, image_url?: string | null }`.
+Ingredient strings are parsed heuristically (leading amount incl. unicode
+fractions and `1 1/2` forms, a known unit token, trailing `, …` becomes notes;
+anything unclear lands whole in `name`). `image_url` is the source page's URL,
+not copied into our Storage bucket.
+**Behaviour notes:** 10s fetch timeout, response capped at ~3 MB, sends a
+browser `User-Agent`.
 
 ### `combine-riffs` (Phase 4 — not yet scoped in detail)
 **Status:** planned (Phase 4)
