@@ -4,6 +4,7 @@ import { RequireAuth } from './auth/RequireAuth'
 import { AuthCallback } from './routes/AuthCallback'
 import { CookingMode } from './routes/CookingMode'
 import { Login } from './routes/Login'
+import { RecipeCookLog } from './routes/RecipeCookLog'
 import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
 import { RecipeList } from './routes/RecipeList'
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/recipes/new" element={<RecipeNew />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeEdit />} />
+          <Route path="/recipes/:id/log" element={<RecipeCookLog />} />
         </Route>
         {/* Cooking mode is full-page: no app chrome, still auth-gated. */}
         <Route path="/recipes/:id/cook" element={<CookingMode />} />

@@ -382,7 +382,41 @@ textarea.rb-field {
 
 .rb-form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+/* --- rating (cook log) --- */
+
+.rb-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rb-rating__star {
+  padding: 4px 6px;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--line);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.rb-rating__star.is-on {
+  color: var(--gold);
+}
+
+.rb-rating__star:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+.rb-rating .rb-button {
+  margin-left: 8px;
+  padding: 6px 12px;
 }
 
 .rb-form-preview,

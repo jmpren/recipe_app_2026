@@ -385,6 +385,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      log_cook: {
+        Args: {
+          notes?: string
+          rating?: number
+          recipe_id: string
+          servings_made?: number
+        }
+        Returns: {
+          cooked_at: string
+          id: string
+          notes: string | null
+          rating: number | null
+          recipe_id: string
+          servings_made: number | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cook_logs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_recipe: {
         Args: { payload: Json }
         Returns: {

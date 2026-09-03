@@ -55,11 +55,15 @@ that does not exist.
 the other step fields; preserving notes across an edit is a Phase 2 concern.
 
 ### `log_cook`
-**Status:** planned (Phase 1)
+**Status:** implemented (Phase 1)
 **Purpose:** Records a cook and returns the new cook_log row. Exists as a function
 (rather than a plain insert) so future logic — e.g. triggering the servings-prediction
 check — has one place to live.
-**Input:** `recipe_id uuid, servings_made int, rating int, notes text`
+**Input:** `recipe_id uuid` (required), `servings_made int` (optional),
+`rating int` (optional, 1–5), `notes text` (optional; blank stored as null).
+`security invoker`; `user_id` is forced to `auth.uid()`. Raises on no auth,
+missing `recipe_id`, an out-of-range `rating`, or a `recipe_id` the caller can't
+see (not owned / doesn't exist).
 **Output:** the created `cook_logs` row
 
 ### `create_riff`

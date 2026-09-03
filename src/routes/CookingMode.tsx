@@ -1,28 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { loadCookProgress, saveCookProgress } from '../lib/cookProgress'
 import { getRecipe } from '../lib/recipes'
 import { useWakeLock } from '../lib/useWakeLock'
 import type { RecipeWithDetail } from '../types'
-
-const progressKey = (recipeId: string) => `rb-cook:${recipeId}`
-
-function loadChecked(recipeId: string): string[] {
-  try {
-    const raw = localStorage.getItem(progressKey(recipeId))
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
-  } catch {
-    return []
-  }
-}
-
-function saveChecked(recipeId: string, ids: string[]) {
-  try {
-    localStorage.setItem(progressKey(recipeId), JSON.stringify(ids))
-  } catch {
-    // Private mode / quota — progress just won't survive a reload.
-  }
-}
 
 /** Short beep via WebAudio; silently does nothing if the context can't start. */
 function beep() {
@@ -126,7 +107,7 @@ export function CookingMode() {
       .then((r) => {
         if (!active) return
         setRecipe(r)
-        if (r) setChecked(new Set(loadChecked(id)))
+        if (r) setChecked(new Set(loadCookProgress(id)))
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : 'Failed to load recipe')
@@ -138,7 +119,7 @@ export function CookingMode() {
 
   // Persist tick-box progress so a reload / accidental exit doesn't lose it.
   useEffect(() => {
-    if (recipe) saveChecked(id, [...checked])
+    if (recipe) saveCookProgress(id, [...checked])
   }, [checked, id, recipe])
 
   // Esc closes the ingredients sheet.
@@ -161,13 +142,9 @@ export function CookingMode() {
   }
 
   function finish() {
-    // Log-a-cook will slot in here in a later Phase 1 task; for now just exit.
-    try {
-      localStorage.removeItem(progressKey(id))
-    } catch {
-      // ignore
-    }
-    navigate(`/recipes/${id}`)
+    // Straight to the cook log; progress is cleared there once it's saved, so
+    // cancelling out of the log screen leaves your place intact.
+    navigate(`/recipes/${id}/log`)
   }
 
   const doneCount = useMemo(
@@ -258,7 +235,7 @@ export function CookingMode() {
         </section>
 
         <button type="button" className="rb-button" onClick={finish}>
-          Finish cooking
+          Finish &amp; log cook
         </button>
       </div>
 
