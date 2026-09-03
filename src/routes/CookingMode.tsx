@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { StepNoteEditor } from '../components/StepNoteEditor'
 import { loadCookProgress, saveCookProgress } from '../lib/cookProgress'
-import { getRecipe } from '../lib/recipes'
+import { getRecipe, setStepNote } from '../lib/recipes'
 import { formatAmount } from '../lib/units'
 import { useWakeLock } from '../lib/useWakeLock'
 import type { RecipeWithDetail } from '../types'
@@ -138,6 +139,20 @@ export function CookingMode() {
     })
   }
 
+  async function saveStepNote(stepId: string, note: string) {
+    await setStepNote(stepId, note)
+    setRecipe((r) =>
+      r
+        ? {
+            ...r,
+            recipe_steps: r.recipe_steps.map((s) =>
+              s.id === stepId ? { ...s, note: note || null } : s,
+            ),
+          }
+        : r,
+    )
+  }
+
   function finish() {
     // Straight to the cook log; progress is cleared there once it's saved, so
     // cancelling out of the log screen leaves your place intact.
@@ -222,7 +237,12 @@ export function CookingMode() {
                       </span>
                       <span className="rb-cook-step__text">{step.instruction}</span>
                     </button>
-                    {step.note && <p className="rb-step-note">{step.note}</p>}
+                    <div className="rb-cook-step__notes">
+                      <StepNoteEditor
+                        note={step.note}
+                        onSave={(note) => saveStepNote(step.id, note)}
+                      />
+                    </div>
                     <StepTimer />
                   </li>
                 )

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteRecipe, getRecipe, listRiffs } from '../lib/recipes'
+import { StepNoteEditor } from '../components/StepNoteEditor'
+import { deleteRecipe, getRecipe, listRiffs, setStepNote } from '../lib/recipes'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
 import type { RecipeIngredient, RecipeRiff, RecipeWithDetail } from '../types'
 
@@ -101,6 +102,20 @@ export function RecipeDetail() {
     return formatAmount(ing.quantity, ing.unit)
   }
 
+  async function saveStepNote(stepId: string, note: string) {
+    await setStepNote(stepId, note)
+    setRecipe((r) =>
+      r
+        ? {
+            ...r,
+            recipe_steps: r.recipe_steps.map((s) =>
+              s.id === stepId ? { ...s, note: note || null } : s,
+            ),
+          }
+        : r,
+    )
+  }
+
   return (
     <article className="rb-stack">
       {recipe.image_url && (
@@ -189,7 +204,10 @@ export function RecipeDetail() {
             {recipe.recipe_steps.map((step) => (
               <li key={step.id}>
                 <p>{step.instruction}</p>
-                {step.note && <p className="rb-step-note">{step.note}</p>}
+                <StepNoteEditor
+                  note={step.note}
+                  onSave={(note) => saveStepNote(step.id, note)}
+                />
               </li>
             ))}
           </ol>

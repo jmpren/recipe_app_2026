@@ -220,7 +220,9 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 ### Phase 2 — Personal power features
 - [x] Metric ⇄ imperial conversion (`convert_measurement(s)` RPC; Original/Metric/
       Imperial toggle on the recipe detail ingredient list, display-only)
-- [ ] Inline step notes (the `recipe_steps.note` field, NYT-style)
+- [x] Inline step notes (the `recipe_steps.note` field, NYT-style) — add/edit
+      per step on the recipe detail page and in cooking mode; a plain column
+      write, never a version (PLAN §5)
 - [ ] Toggle: view original vs. current-edit version of a recipe
 - [ ] Serving-size learning: after a few logged cooks, suggest a corrected
       `servings` default based on `cook_logs.servings_made`

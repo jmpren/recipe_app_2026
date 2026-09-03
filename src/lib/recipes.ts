@@ -76,6 +76,23 @@ export async function createRiff(
   return data as RecipeRiff
 }
 
+/**
+ * Set (or clear, when blank) the inline note on one step. A plain column write —
+ * deliberately NOT routed through update_recipe: step notes are personal
+ * annotations, not a permanent edit, so they never create a recipe_versions row
+ * (PLAN.md §5 / §7). RLS scopes the update to the owner.
+ */
+export async function setStepNote(stepId: string, note: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('recipe_steps')
+    .update({ note: note.trim() || null })
+    .eq('id', stepId)
+    .select('id')
+  if (error) throw error
+  // No row back = RLS hid it / bad id; surface it rather than failing silently.
+  if (!data || data.length === 0) throw new Error('That step no longer exists.')
+}
+
 async function uploadRecipePhoto(recipeId: string, file: File): Promise<string> {
   const { data: auth } = await supabase.auth.getUser()
   const userId = auth.user?.id
