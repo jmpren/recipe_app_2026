@@ -263,7 +263,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       `src/lib/scale.ts` — pure, client-side (see its header re: PLAN §3).
 
 ### Phase 3 — Multi-user
-- [ ] Expose the sign-up flow (auth infrastructure already exists from Phase 0)
+- [x] Expose the sign-up flow (auth infrastructure already exists from Phase 0)
+      — magic link now creates accounts (`shouldCreateUser`), welcoming Login
+      copy; `ProfileProvider` + `/profile` (rename display name, sign out);
+      one-time "set a display name" nudge on Home for fresh accounts.
 - [ ] Friends list; view friends' recipes and riffs (read-only, opt-in)
 - [ ] Riff "likes" and viewing others' riffs as remix suggestions
 - [ ] Collaborative family meal planning (suggest → vote → add to shared plan)

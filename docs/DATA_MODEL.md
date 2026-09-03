@@ -16,7 +16,7 @@ One row per user. Auto-created via trigger when someone signs up.
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid | Primary key, matches `auth.users.id` |
-| display_name | text | Shown in UI; defaults to email if not set at signup |
+| display_name | text | Auto-set to the email by the `handle_new_user` trigger; the user renames it on `/profile` (plain update, RLS-scoped to `auth.uid()`) |
 | created_at | timestamptz | |
 
 ## recipes

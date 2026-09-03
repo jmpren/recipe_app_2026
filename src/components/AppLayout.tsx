@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { useProfile } from '../auth/useProfile'
 
 const TABS = [
   { to: '/', label: 'Home', end: true },
@@ -9,6 +9,11 @@ const TABS = [
 ]
 
 export function AppLayout() {
+  const { profile } = useProfile()
+  // "@" ⇒ still the auto-assigned email; show a neutral label until they set a name.
+  const accountLabel =
+    !profile || profile.display_name.includes('@') ? 'Account' : profile.display_name
+
   return (
     <div className="rb-app">
       <div className="rb-topbar">
@@ -20,13 +25,9 @@ export function AppLayout() {
             <NavLink to="/recipes/new" className="rb-button">
               Add recipe
             </NavLink>
-            <button
-              type="button"
-              className="rb-button rb-button--ghost"
-              onClick={() => void supabase.auth.signOut()}
-            >
-              Sign out
-            </button>
+            <NavLink to="/profile" className="rb-button rb-button--ghost rb-account">
+              {accountLabel}
+            </NavLink>
           </div>
         </header>
 

@@ -1,3 +1,4 @@
+import { NamePrompt } from '../components/NamePrompt'
 import { TopRated } from '../components/TopRated'
 import { MealPlan } from './MealPlan'
 
@@ -5,6 +6,7 @@ import { MealPlan } from './MealPlan'
 export function Home() {
   return (
     <div className="rb-stack">
+      <NamePrompt />
       <MealPlan />
       <TopRated />
     </div>

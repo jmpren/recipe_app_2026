@@ -20,7 +20,11 @@ export function Login() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        // Same link works for returning and brand-new users.
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     })
 
     if (error) {
@@ -38,12 +42,13 @@ export function Login() {
 
         {status === 'sent' ? (
           <p className="rb-muted">
-            Check <strong>{email}</strong> for a sign-in link. You can close this tab.
+            Check <strong>{email}</strong> for a sign-in link — clicking it signs you in, or
+            creates your account if you&rsquo;re new. You can close this tab.
           </p>
         ) : (
           <form onSubmit={sendLink}>
             <p className="rb-muted" style={{ marginTop: 0 }}>
-              Enter your email and we&rsquo;ll send you a one-time sign-in link.
+              New or returning — enter your email and we&rsquo;ll send a one-time link. No password.
             </p>
             <label htmlFor="email" className="rb-muted" style={{ fontSize: 14 }}>
               Email

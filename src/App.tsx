@@ -5,6 +5,7 @@ import { AuthCallback } from './routes/AuthCallback'
 import { CookingMode } from './routes/CookingMode'
 import { Home } from './routes/Home'
 import { Login } from './routes/Login'
+import { Profile } from './routes/Profile'
 import { RecipeCookLog } from './routes/RecipeCookLog'
 import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/recipes" element={<RecipeList />} />
           <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/shopping" element={<ShoppingList />} />
+          <Route path="/profile" element={<Profile />} />
           {/* /plan was the calendar's old home; it's the home screen now */}
           <Route path="/plan" element={<Navigate to="/" replace />} />
           <Route path="/recipes/new" element={<RecipeNew />} />
