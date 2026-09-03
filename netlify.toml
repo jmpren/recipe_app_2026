@@ -1,0 +1,23 @@
+# Netlify build + hosting config for the Recipe Book PWA (Vite + React SPA).
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Client-side routing: serve index.html for any path that isn't a real file.
+# (Real files — /assets/*, /sw.js, /manifest.webmanifest, icons — are served
+# directly because Netlify only applies this rewrite when nothing matches.)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# The service worker must never be cached by the browser/CDN, so a new deploy
+# is picked up immediately.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
