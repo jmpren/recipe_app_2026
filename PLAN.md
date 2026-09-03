@@ -23,13 +23,71 @@ scoped-but-deferred so future work has a clear target.
 | Backend | Supabase (Postgres + Auth + Storage) | Auth and per-user data isolation (via Row Level Security) come essentially free; generous free tier; beginner-friendly |
 | Hosting | Vercel or Netlify | Free tier, deploys from GitHub in minutes |
 | Routing | react-router-dom | Standard, simple |
+| Future client | Native iOS app (Swift), via `supabase-swift` | Planned second client, not built in this phase — see Section 3 for why the backend requires no changes to support it |
 
-No native mobile app in this plan. If ever needed later, the Supabase backend carries
-over unchanged.
+No native mobile app is built in this plan yet. Because Supabase is a network API
+rather than a JavaScript-specific backend, adding the iOS app later is a matter of
+building a new client against the existing backend — see Section 3 for the rule that
+keeps this true.
 
 ---
 
-## 3. Data model
+## 3. Platform strategy: web → iOS (SwiftUI) → Android (React Native)
+
+**Sequencing and reasoning:**
+1. **React web, first.** Validates the product concept fastest and cheapest — no App
+   Store review, instant deploys, cheap to change direction while the concept is
+   still being proven.
+2. **Native iOS (Swift/SwiftUI), second.** Built once the concept and feature set are
+   proven, for native performance and Apple look/feel.
+3. **Android (React Native), last.** Built after iOS, sharing logic/patterns with the
+   React web codebase.
+
+**Code-sharing hierarchy this creates:** web and Android (React Native) can share
+actual code — `supabase-js` runs identically in both, so data-fetching hooks and
+client logic can be reused nearly as-is. Swift cannot share any of that. This is
+the reason Section 3's backend rule below matters most for the Swift client
+specifically — it's the one platform with no JS fallback to lean on.
+
+**Why the backend doesn't need to change for any of this:** Supabase (Postgres +
+Auth + Storage) is a network API, not a JavaScript-specific backend. React talks to
+it via `supabase-js`, React Native via the same `supabase-js`, and Swift via Apple's
+official `supabase-swift` library — same database, same auth, same Row Level
+Security rules, no duplication.
+
+**The rule this creates for how we build features:** anything beyond basic CRUD must
+live in the backend, never solely in a client codebase:
+
+- **Business rules with no external dependencies** (favorites bias, repeat-within-X-weeks
+  logic, servings-prediction averaging, riff promotion) → written as **Postgres
+  functions** (SQL/plpgsql), called via RPC from any client.
+- **Anything requiring outside network calls** (URL recipe import/extraction, future
+  nutrition API lookups, future AI riff-merge) → written as **Supabase Edge Functions**
+  (hosted serverless functions), called via RPC from any client.
+- **Every client's job — React now, React Native and Swift later — is limited to:**
+  rendering UI, handling input, and calling these shared backend functions.
+
+This is a hard rule starting in Phase 1, not something to retrofit later — see
+Section 9.
+
+## 4. Documentation practice
+
+Two living reference documents exist alongside this plan, specifically so a future
+Swift (or React Native) implementation can be built accurately without reverse-engineering
+the React codebase:
+
+- **`docs/DATA_MODEL.md`** — human-readable description of every table, kept in sync
+  with `supabase/schema.sql`. Source of truth for entity shape.
+- **`docs/API_CONTRACT.md`** — every Postgres function and Edge Function: name,
+  inputs, outputs, purpose, and status (planned vs. implemented). Source of truth
+  for backend behavior. Updated the moment any such function is created or changed
+  — not after the fact.
+
+Rule: if a change is made to the database schema or a backend function without a
+corresponding update to these docs in the same piece of work, treat that as
+incomplete, not done. See Section 9.
+
+## 5. Data model
 
 ```sql
 -- profiles: one row per user, auto-created on signup
@@ -89,7 +147,7 @@ data model."
 
 ---
 
-## 4. Design system (decided)
+## 6. Design system (decided)
 
 - **Palette:** warm paper background (`#FAF7F1`), deep ink text (`#23291F`), sage green
   primary (`#3F5B44`), muted gold accent (`#C9A24B`) — deliberately not the generic
@@ -99,7 +157,7 @@ data model."
 
 ---
 
-## 5. Core user flow (confirmed)
+## 7. Core user flow (confirmed)
 
 ```
 Open app → Browse/search recipes → Add a recipe (scratch or paste URL)
@@ -125,7 +183,7 @@ Key rules locked in during planning:
 
 ---
 
-## 6. Phased roadmap
+## 8. Phased roadmap
 
 ### Phase 0 — Setup
 - Supabase project created, schema above applied, Storage bucket `recipe-photos`
@@ -190,7 +248,7 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 
 ---
 
-## 7. Known open questions (intentionally deferred, not forgotten)
+## 9. Known open questions (intentionally deferred, not forgotten)
 
 - Offline support / caching strategy — not decided, revisit after MVP is in daily use
 - Whether riff "what_changed" is structured (ingredient-level diff) or free text —
@@ -200,15 +258,30 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 
 ---
 
-## 8. Instructions for Claude Code
+## 10. Instructions for Claude Code
 
 When executing this plan:
 1. Start at Phase 0. Do not skip ahead to Phase 2+ features even if convenient —
    the phase ordering reflects deliberate sequencing (e.g., cook logging must exist
    before favorites-bias can be built against real data).
-2. Treat every MVP checkbox in Section 6 as a discrete, testable unit of work.
-3. Preserve the Edit-vs-Riff distinction in Section 5 exactly as specified — this
+2. Treat every MVP checkbox in Section 8 as a discrete, testable unit of work.
+3. Preserve the Edit-vs-Riff distinction in Section 7 exactly as specified — this
    was the most deliberated decision in planning and should not be "simplified"
    during implementation.
-4. Ask before deviating from the data model in Section 3 — it was designed so
+4. Ask before deviating from the data model in Section 5 — it was designed so
    later phases don't require restructuring.
+5. Follow the platform strategy in Section 3: any logic beyond basic CRUD
+   (favorites bias, repeat-limits, servings prediction, riff promotion, URL import
+   extraction, etc.) must be implemented as a Postgres function or Supabase Edge
+   Function — never solely as logic embedded in React components or hooks. Two
+   future clients (React Native for Android, Swift for iOS) are planned and must
+   be able to reuse this logic without reimplementing it. If a feature seems
+   simplest to write as pure React-side logic, treat that as a signal to move it
+   to the backend instead, not a reason to skip this rule.
+6. Whenever a database table changes or a Postgres/Edge function is created or
+   changed, update `docs/DATA_MODEL.md` and/or `docs/API_CONTRACT.md` in the same
+   piece of work — per Section 4, this is not optional or a follow-up task.
+7. When reviewing or writing code, flag any business logic (validation rules,
+   calculations, permission checks, anything beyond rendering and calling the
+   backend) found living only in React component or hook code. This should be
+   surfaced explicitly, not silently left in place, even if functionally correct.
