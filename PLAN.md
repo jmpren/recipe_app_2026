@@ -241,7 +241,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       `build_shopping_list(recipe_ids[])` RPC (merges by name+unit) + a
       `/shopping` page (pick recipes, check items off; working list kept in
       localStorage). "Shopping list for this week" button on `/plan`.
-- [ ] Tags/filtering (introduce once real usage patterns exist)
+- [x] Tags/filtering — `add_recipe_tag(recipe_id, name)` RPC (find-or-create +
+      link, lowercased, not versioned); tag chips + add field on the recipe
+      detail page; a tag-chip filter (AND) on the recipe list, tags shown on
+      cards. Uses the Phase 0 `tags` / `recipe_tags` tables.
 - [ ] Camera scan → OCR → editable recipe form
 - [ ] Number-recognition scaling in steps (e.g. "1/4 cup" → dropdown to adjust)
 

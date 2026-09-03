@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AddToPlan } from '../components/AddToPlan'
 import { StepNoteEditor } from '../components/StepNoteEditor'
+import { TagEditor } from '../components/TagEditor'
 import { predictedServings, type ServingsSuggestion } from '../lib/cooks'
 import {
   deleteRecipe,
@@ -223,6 +224,8 @@ export function RecipeDetail() {
       </div>
 
       <AddToPlan recipeId={recipe.id} />
+
+      <TagEditor recipeId={recipe.id} />
 
       {hasEdits && originalVersion && (
         <div className="rb-section-head">

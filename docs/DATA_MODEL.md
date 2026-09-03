@@ -104,8 +104,11 @@ friends' riffs) that version history never will.
 | created_at | timestamptz | |
 
 ## tags / recipe_tags
-Shared/global tags, many-to-many with recipes. Introduced in Phase 2 once real
-usage patterns exist — table exists from Phase 0 but unused until then.
+Shared/global tags, many-to-many with recipes. Tables exist from Phase 0; wired
+up in Phase 2. `tags.name` is stored lowercased and unique; `tags` is public
+read / anyone-insert, `recipe_tags` is owner-scoped through the recipe. Assign
+via the `add_recipe_tag` RPC (find-or-create + link); remove with a plain
+`recipe_tags` delete. Tag changes are not versioned.
 
 | Table | Field | Type | Notes |
 |---|---|---|---|

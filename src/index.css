@@ -791,6 +791,85 @@ textarea.rb-field {
   text-decoration: line-through;
 }
 
+/* --- tags --- */
+
+.rb-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rb-tags--card {
+  margin-top: 2px;
+}
+
+.rb-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.rb-tag--removable button {
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 0;
+  padding: 0 0 0 2px;
+  cursor: pointer;
+}
+
+.rb-tag--removable button:hover {
+  color: var(--danger);
+}
+
+.rb-tag-add {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.rb-tag-add .rb-field {
+  width: 140px;
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+.rb-tag-add .rb-button {
+  padding: 5px 12px;
+}
+
+.rb-tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rb-tag-filter__chip {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.rb-tag-filter__chip.is-on {
+  color: var(--paper-raised);
+  background: var(--sage);
+  border-color: var(--sage-dark);
+}
+
 /* In cooking mode the step card has no padding of its own — inset the note UI
    so it lines up with the step text. */
 .rb-cook-step__notes {

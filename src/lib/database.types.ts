@@ -407,6 +407,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_recipe_tag: {
+        Args: { recipe_id: string; tag_name: string }
+        Returns: {
+          id: string
+          name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tags"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       build_shopping_list: { Args: { recipe_ids: string[] }; Returns: Json }
       convert_measurement: {
         Args: { quantity: number; target: string; unit: string }

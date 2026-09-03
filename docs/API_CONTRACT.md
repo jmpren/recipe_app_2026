@@ -106,6 +106,18 @@ row with no amount.
 quantity: number | null, has_unmeasured: boolean, count: int, recipes: string[] }`,
 ordered by name then unit.
 
+### `add_recipe_tag`
+**Status:** implemented (Phase 2)
+**Purpose:** Find-or-create a tag (shared vocabulary, stored lowercased) and link
+it to a recipe — `INSERT … ON CONFLICT` on both `tags` and `recipe_tags`, so it's
+idempotent and race-safe. `security invoker`; the `recipe_tags` RLS policy
+blocks the link unless the caller owns `recipe_id`. Tags are **not** versioned.
+**Input:** `recipe_id uuid`, `tag_name text` (trimmed + lowercased; 1–40 chars).
+Raises on no auth, blank/over-long name, or an unknown `recipe_id`.
+**Output:** the `tags` row (`id`, `name`).
+**Removing a tag** (`delete from recipe_tags`) and **listing tags** are plain
+RLS-scoped table ops — no contract entry.
+
 ### `promote_riff_to_version`
 **Status:** planned (Phase 1)
 **Purpose:** Takes a riff and creates a new permanent `recipe_versions` entry from
