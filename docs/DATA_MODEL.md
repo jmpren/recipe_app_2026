@@ -135,6 +135,30 @@ Index on `(user_id, planned_on)` for week reads. Rows are added via the
 `plan_meal` RPC (forces `user_id`, appends `position`) and removed with a plain
 delete.
 
+## friendships
+One row per relationship (Phase 3). Starts `pending`; the addressee accepts to
+make it `accepted`.
+
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid | Primary key |
+| requester_id | uuid | `profiles.id` — who sent it |
+| addressee_id | uuid | `profiles.id` — who received it |
+| status | text | `pending` / `accepted` |
+| created_at | timestamptz | |
+
+`unique (requester_id, addressee_id)`, `check (requester_id <> addressee_id)`.
+Sent via the `send_friend_request(email)` RPC; accepted with a plain
+`status`→`accepted` update (RLS: addressee only); withdrawn/declined/unfriended
+with a plain delete (RLS: either party).
+
+**RLS effect of an *accepted* friendship:** each friend gets `SELECT` on the
+other's `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_versions`,
+`recipe_riffs`, `recipe_tags` — read only, no writes. A `profiles` row is
+readable by anyone with a friendship row (pending or accepted), so pending
+requests can show a name. `cook_logs` stay private. `are_friends(a, b)` is the
+helper used in those policies.
+
 ## Storage
 
 ### Bucket: `recipe-photos`

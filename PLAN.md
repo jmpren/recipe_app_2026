@@ -267,7 +267,13 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       — magic link now creates accounts (`shouldCreateUser`), welcoming Login
       copy; `ProfileProvider` + `/profile` (rename display name, sign out);
       one-time "set a display name" nudge on Home for fresh accounts.
-- [ ] Friends list; view friends' recipes and riffs (read-only, opt-in)
+- [x] Friends list; view friends' recipes and riffs (read-only, opt-in) —
+      `friendships` table (pending→accepted); `send_friend_request` /
+      `accept_friend_request` RPCs; friend-read RLS `SELECT` policies on
+      recipes + parts (via `are_friends`); `/friends` (manage) and
+      `/friends/:id` (their recipes); recipe detail renders read-only for a
+      friend's recipe. `suggest_meals` / `top_rated_recipes` re-scoped to
+      `owner_id = auth.uid()`.
 - [ ] Riff "likes" and viewing others' riffs as remix suggestions
 - [ ] Collaborative family meal planning (suggest → vote → add to shared plan)
 - [ ] "Pick 1, suggest 3 more" meal-plan assist

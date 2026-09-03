@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { AddToPlan } from '../components/AddToPlan'
 import { StepNoteEditor } from '../components/StepNoteEditor'
 import { TagEditor } from '../components/TagEditor'
 import { predictedServings, type ServingsSuggestion } from '../lib/cooks'
+import { getPersonName } from '../lib/friends'
 import {
   deleteRecipe,
   getRecipe,
@@ -27,17 +29,21 @@ function formatDate(iso: string): string {
 export function RecipeDetail() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [recipe, setRecipe] = useState<RecipeWithDetail | null | undefined>(undefined)
   const [riffs, setRiffs] = useState<RecipeRiff[]>([])
   const [riffsOpen, setRiffsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [ownerName, setOwnerName] = useState<string | null>(null)
+
+  const isOwner = !recipe || recipe.owner_id === user?.id
 
   // Where the user came from — set by whoever linked here (RecipeCard `from`, a
-  // calendar-day link, …). Falls back to the recipe book on a fresh load.
+  // calendar-day link, …). Falls back sensibly on a fresh load.
   const navState = useLocation().state as { backTo?: string; backLabel?: string } | null
-  const backTo = navState?.backTo ?? '/recipes'
-  const backLabel = navState?.backLabel ?? 'Recipe Book'
+  const backTo = navState?.backTo ?? (isOwner ? '/recipes' : '/friends')
+  const backLabel = navState?.backLabel ?? (isOwner ? 'Recipe Book' : 'Friends')
 
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original')
   const [converted, setConverted] = useState<Partial<Record<'metric' | 'imperial', ConvertedAmount[]>>>({})
@@ -88,6 +94,23 @@ export function RecipeDetail() {
       active = false
     }
   }, [id])
+
+  // A friend's recipe → look up whose it is (for the "by …" line). Only rendered
+  // when !isOwner, so a stale name from a previous recipe is never shown.
+  useEffect(() => {
+    if (!recipe || isOwner) return
+    let active = true
+    getPersonName(recipe.owner_id)
+      .then((n) => {
+        if (active) setOwnerName(n)
+      })
+      .catch(() => {
+        /* the "by …" line just won't show a name */
+      })
+    return () => {
+      active = false
+    }
+  }, [recipe, isOwner])
 
   // Fetch (once) the converted amounts for the chosen system. Stored data is
   // never touched — this is display only.
@@ -147,6 +170,7 @@ export function RecipeDetail() {
     : []
 
   const showServingsHint =
+    isOwner &&
     servingsHint != null &&
     (recipe.servings == null || servingsHint.suggestedServings !== recipe.servings)
 
@@ -208,6 +232,7 @@ export function RecipeDetail() {
 
       <header className="rb-stack rb-stack--tight">
         <h1>{recipe.title}</h1>
+        {!isOwner && <p className="rb-muted">by {ownerName ?? 'a friend'} · view only</p>}
         {meta.length > 0 && <p className="rb-muted">{meta.join(' · ')}</p>}
         {recipe.source_url && (
           <p className="rb-muted">
@@ -234,29 +259,31 @@ export function RecipeDetail() {
         )}
       </header>
 
-      <div className="rb-form-actions">
-        <Link className="rb-button" to={`/recipes/${recipe.id}/cook`}>
-          Cook this
-        </Link>
-        <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/log`}>
-          Log a cook
-        </Link>
-        <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/edit`}>
-          Edit
-        </Link>
-        <button
-          type="button"
-          className="rb-button rb-button--ghost rb-button--danger"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? 'Deleting…' : 'Delete'}
-        </button>
-      </div>
+      {isOwner && (
+        <div className="rb-form-actions">
+          <Link className="rb-button" to={`/recipes/${recipe.id}/cook`}>
+            Cook this
+          </Link>
+          <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/log`}>
+            Log a cook
+          </Link>
+          <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/edit`}>
+            Edit
+          </Link>
+          <button
+            type="button"
+            className="rb-button rb-button--ghost rb-button--danger"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+        </div>
+      )}
 
-      <AddToPlan recipeId={recipe.id} />
+      {isOwner && <AddToPlan recipeId={recipe.id} />}
 
-      <TagEditor recipeId={recipe.id} />
+      <TagEditor recipeId={recipe.id} readOnly={!isOwner} />
 
       {hasEdits && originalVersion && (
         <div className="rb-section-head">
@@ -381,6 +408,7 @@ export function RecipeDetail() {
                 <p>{renderStepText(step.instruction)}</p>
                 <StepNoteEditor
                   note={step.note}
+                  readOnly={!isOwner}
                   onSave={(note) => saveStepNote(step.id, note)}
                 />
               </li>

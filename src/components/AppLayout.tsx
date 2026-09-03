@@ -4,6 +4,7 @@ import { useProfile } from '../auth/useProfile'
 const TABS = [
   { to: '/', label: 'Home', end: true },
   { to: '/recipes', label: 'Recipe Book', end: false },
+  { to: '/friends', label: 'Friends', end: false },
   { to: '/shopping', label: 'Shopping', end: false },
   { to: '/suggestions', label: 'Ideas', end: false },
 ]

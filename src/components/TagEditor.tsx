@@ -2,8 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { addRecipeTag, getRecipeTags, listTags, removeRecipeTag, type Tag } from '../lib/tags'
 
 /** Tag chips + an add field on the recipe detail page. Tag changes are metadata,
- *  not a recipe revision (never versioned). */
-export function TagEditor({ recipeId }: { recipeId: string }) {
+ *  not a recipe revision (never versioned). `readOnly` = a friend's recipe:
+ *  chips only. */
+export function TagEditor({ recipeId, readOnly = false }: { recipeId: string; readOnly?: boolean }) {
   const [tags, setTags] = useState<Tag[] | null>(null)
   const [allNames, setAllNames] = useState<string[]>([])
   const [input, setInput] = useState('')
@@ -72,6 +73,19 @@ export function TagEditor({ recipeId }: { recipeId: string }) {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (readOnly) {
+    if (!tags || tags.length === 0) return null
+    return (
+      <div className="rb-tags rb-tags--card">
+        {tags.map((t) => (
+          <span key={t.id} className="rb-tag">
+            {t.name}
+          </span>
+        ))}
+      </div>
+    )
   }
 
   return (

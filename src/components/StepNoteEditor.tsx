@@ -4,6 +4,8 @@ interface Props {
   note: string | null
   /** Receives the trimmed note ('' means clear). Should persist and update state. */
   onSave: (note: string) => Promise<void>
+  /** true for a friend's recipe — show the note, no add/edit. */
+  readOnly?: boolean
 }
 
 /**
@@ -11,11 +13,15 @@ interface Props {
  * there is one, plus an add / edit affordance. A note is a private annotation —
  * saving it never touches recipe versions (see lib/recipes.setStepNote).
  */
-export function StepNoteEditor({ note, onSave }: Props) {
+export function StepNoteEditor({ note, onSave, readOnly = false }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(note ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  if (readOnly) {
+    return note ? <p className="rb-step-note">{note}</p> : null
+  }
 
   async function save() {
     setSaving(true)

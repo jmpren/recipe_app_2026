@@ -147,8 +147,8 @@ list converts in one call.
 **Status:** implemented (Phase 2)
 **Purpose:** Returns candidate recipes for meal planning, applying favorites-bias
 and the repeat-within-X-weeks exclusion rule, reading from `cook_logs` history.
-`security invoker` — RLS on `recipes` and `cook_logs` makes it per-user with no
-extra check.
+`security invoker`; also filters `owner_id = auth.uid()` explicitly (since Phase
+3 a friend's recipes are SELECT-visible, and suggestions must stay yours).
 **Input:** `exclude_weeks int` (default 2; `<= 0` disables the exclusion),
 `limit_count int` (default 5; clamped to `>= 0`). *(Named `limit_count`, not
 `limit`, which is a reserved word.)*
@@ -158,12 +158,29 @@ so repeated calls rotate rather than repeat; tie-break on least-recently-cooked.
 "Favorite" is derived from rating history — there is no stored favorite flag.
 **Output:** up to `limit_count` `recipes` rows, best-fit first.
 
+### `send_friend_request` / `are_friends`
+**Status:** implemented (Phase 3)
+**`send_friend_request(addressee_email text)` → `friendships`** — resolves the
+email to an account (`security definer`, reads `auth.users`) and creates a
+`pending` row from the caller. If that person already has a pending request out
+to the caller, it's **accepted** instead and that row returned. Raises on: no
+auth, blank email, no account for the email, your own address, an existing
+`accepted` friendship, or an existing pending request you sent.
+**`are_friends(a uuid, b uuid)` → boolean** — accepted friendship in either
+direction. `stable`, `security invoker`; used inside the friend-read RLS
+policies. Callers always pass `auth.uid()` as one arg.
+**`accept_friend_request(request_id uuid)` → `friendships`** — the only
+pending → accepted path (there is no UPDATE policy on `friendships`, so a client
+can't rewrite the row while accepting). `security definer`; addressee only.
+**Declining / cancelling / unfriending** are a plain delete on `friendships`
+(RLS: either party) — no contract entry.
+
 ### `top_rated_recipes`
 **Status:** implemented (Phase 2)
 **Purpose:** The home screen's "Top rated" strip. Recipes that have at least one
 cook rating, ordered by `avg(cook_logs.rating)` desc, then rating count, then
 newest. Deterministic (unlike `suggest_meals`). `stable`, `security invoker` —
-RLS makes it per-user.
+RLS makes it per-user; now also filters `owner_id = auth.uid()` explicitly (friends' recipes are SELECT-visible since Phase 3).
 **Input:** `limit_count int` (default 6, clamped `>= 0`).
 **Output:** `recipes` rows, best first.
 

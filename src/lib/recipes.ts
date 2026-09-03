@@ -23,17 +23,32 @@ function numOrNull(v: string): number | null {
 
 const byPosition = <T extends { position: number }>(a: T, b: T) => a.position - b.position
 
-export async function listRecipes(search = ''): Promise<Recipe[]> {
-  let query = supabase.from('recipes').select('*').order('created_at', { ascending: false })
+async function currentUserId(): Promise<string> {
+  const { data } = await supabase.auth.getSession()
+  const id = data.session?.user.id
+  if (!id) throw new Error('Not signed in.')
+  return id
+}
+
+/** Recipes owned by `ownerId` (RLS permits a friend's, since Phase 3). */
+export async function listRecipesByOwner(ownerId: string, search = ''): Promise<Recipe[]> {
+  let query = supabase
+    .from('recipes')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: false })
 
   const term = search.trim()
-  if (term) {
-    query = query.ilike('title', `%${term}%`)
-  }
+  if (term) query = query.ilike('title', `%${term}%`)
 
   const { data, error } = await query
   if (error) throw error
   return data ?? []
+}
+
+/** My own recipes only — the recipe book. */
+export async function listRecipes(search = ''): Promise<Recipe[]> {
+  return listRecipesByOwner(await currentUserId(), search)
 }
 
 /**

@@ -3,6 +3,8 @@ import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './auth/RequireAuth'
 import { AuthCallback } from './routes/AuthCallback'
 import { CookingMode } from './routes/CookingMode'
+import { FriendRecipes } from './routes/FriendRecipes'
+import { Friends } from './routes/Friends'
 import { Home } from './routes/Home'
 import { Login } from './routes/Login'
 import { Profile } from './routes/Profile'
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/recipes" element={<RecipeList />} />
           <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/shopping" element={<ShoppingList />} />
+          <Route path="/friends" element={<Friends />} />
+          <Route path="/friends/:friendId" element={<FriendRecipes />} />
           <Route path="/profile" element={<Profile />} />
           {/* /plan was the calendar's old home; it's the home screen now */}
           <Route path="/plan" element={<Navigate to="/" replace />} />

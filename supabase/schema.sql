@@ -111,8 +111,22 @@ create table meal_plan_entries (
 );
 create index meal_plan_entries_user_date_idx on meal_plan_entries (user_id, planned_on);
 
--- Row Level Security: each user only sees their own data.
--- (Phase 3 will loosen this for shared/friends recipes.)
+-- Friendships (Phase 3): one row, requester -> addressee, pending -> accepted.
+-- Accepted friends get read-only visibility of each other's recipes.
+create table friendships (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references profiles(id) on delete cascade,
+  addressee_id uuid not null references profiles(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'accepted')),
+  created_at timestamptz not null default now(),
+  unique (requester_id, addressee_id),
+  check (requester_id <> addressee_id)
+);
+create index friendships_addressee_idx on friendships (addressee_id);
+create index friendships_requester_idx on friendships (requester_id);
+
+-- Row Level Security: each user sees their own data, plus read-only access to an
+-- accepted friend's recipes (Phase 3).
 alter table profiles enable row level security;
 alter table recipes enable row level security;
 alter table recipe_ingredients enable row level security;
@@ -122,6 +136,7 @@ alter table cook_logs enable row level security;
 alter table recipe_riffs enable row level security;
 alter table recipe_tags enable row level security;
 alter table meal_plan_entries enable row level security;
+alter table friendships enable row level security;
 
 create policy "own profile" on profiles for all using (auth.uid() = id);
 create policy "own recipes" on recipes for all using (auth.uid() = owner_id);
@@ -138,6 +153,138 @@ create policy "own recipe tags" on recipe_tags for all
   using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
 create policy "own meal plan entries" on meal_plan_entries for all
   using (auth.uid() = user_id);
+
+-- Friendships
+create policy "friendships involving me" on friendships for select
+  using (auth.uid() = requester_id or auth.uid() = addressee_id);
+create policy "send friend request" on friendships for insert
+  with check (auth.uid() = requester_id and status = 'pending');
+-- No UPDATE policy: accepting goes through accept_friend_request() so the
+-- addressee can't also rewrite the requester/addressee in the same update.
+create policy "leave friendship" on friendships for delete
+  using (auth.uid() = requester_id or auth.uid() = addressee_id);
+
+-- are_friends(a, b): accepted friendship in either direction (security invoker;
+-- callers pass auth.uid() as one arg so the row is visible to them).
+create or replace function public.are_friends(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from public.friendships f
+    where f.status = 'accepted'
+      and ((f.requester_id = a and f.addressee_id = b)
+        or (f.requester_id = b and f.addressee_id = a))
+  );
+$$;
+
+-- Phase 3 read-only sharing: a profile is readable by anyone with a friendship
+-- row (pending or accepted); a recipe + its parts are readable by accepted
+-- friends of the owner.
+create policy "connected users read profiles" on profiles for select
+  using (
+    auth.uid() = id
+    or exists (
+      select 1 from public.friendships f
+      where (f.requester_id = auth.uid() and f.addressee_id = profiles.id)
+         or (f.addressee_id = auth.uid() and f.requester_id = profiles.id)
+    )
+  );
+create policy "friends read recipes" on recipes for select
+  using (public.are_friends(auth.uid(), owner_id));
+create policy "friends read recipe ingredients" on recipe_ingredients for select
+  using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+create policy "friends read recipe steps" on recipe_steps for select
+  using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+create policy "friends read recipe versions" on recipe_versions for select
+  using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+create policy "friends read recipe riffs" on recipe_riffs for select
+  using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+create policy "friends read recipe tags" on recipe_tags for select
+  using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+
+-- send_friend_request(email) -> friendships. security definer to resolve the
+-- email via auth.users. Auto-accepts if that person already has a request out
+-- to me. See docs/API_CONTRACT.md and …_friendships.sql.
+create or replace function public.send_friend_request(addressee_email text)
+returns public.friendships
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_me uuid := auth.uid();
+  v_them uuid;
+  v_email text := nullif(lower(btrim(addressee_email)), '');
+  v_row public.friendships;
+begin
+  if v_me is null then
+    raise exception 'send_friend_request: not authenticated' using errcode = '28000';
+  end if;
+  if v_email is null then
+    raise exception 'send_friend_request: email is required' using errcode = '23514';
+  end if;
+
+  select id into v_them from auth.users where lower(email) = v_email;
+  if v_them is null then
+    raise exception 'send_friend_request: no account for that email' using errcode = 'P0002';
+  end if;
+  if v_them = v_me then
+    raise exception 'send_friend_request: that is your own address' using errcode = '23514';
+  end if;
+
+  select * into v_row from public.friendships f
+  where (f.requester_id = v_me and f.addressee_id = v_them)
+     or (f.requester_id = v_them and f.addressee_id = v_me)
+  limit 1;
+
+  if found then
+    if v_row.status = 'accepted' then
+      raise exception 'send_friend_request: already friends' using errcode = '23505';
+    end if;
+    if v_row.requester_id = v_them then
+      update public.friendships set status = 'accepted' where id = v_row.id returning * into v_row;
+      return v_row;
+    end if;
+    raise exception 'send_friend_request: a request is already pending' using errcode = '23505';
+  end if;
+
+  insert into public.friendships (requester_id, addressee_id, status)
+  values (v_me, v_them, 'pending')
+  returning * into v_row;
+  return v_row;
+end;
+$$;
+
+-- accept_friend_request(request_id) -> friendships. security definer; the only
+-- way pending -> accepted (there is no UPDATE policy). Addressee only.
+create or replace function public.accept_friend_request(request_id uuid)
+returns public.friendships
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_me uuid := auth.uid();
+  v_row public.friendships;
+begin
+  if v_me is null then
+    raise exception 'accept_friend_request: not authenticated' using errcode = '28000';
+  end if;
+  update public.friendships set status = 'accepted'
+   where id = accept_friend_request.request_id
+     and addressee_id = v_me and status = 'pending'
+  returning * into v_row;
+  if v_row.id is null then
+    raise exception 'accept_friend_request: no pending request for you with that id'
+      using errcode = 'P0002';
+  end if;
+  return v_row;
+end;
+$$;
 
 -- Tags are shared/public read, no owner
 alter table tags enable row level security;
@@ -605,9 +752,12 @@ as $$
   select r.*
   from public.recipes r
   left join cook_stats cs on cs.recipe_id = r.id
-  where suggest_meals.exclude_weeks <= 0
-     or cs.last_cooked_at is null
-     or cs.last_cooked_at < now() - make_interval(weeks => suggest_meals.exclude_weeks)
+  where r.owner_id = auth.uid()
+    and (
+      suggest_meals.exclude_weeks <= 0
+      or cs.last_cooked_at is null
+      or cs.last_cooked_at < now() - make_interval(weeks => suggest_meals.exclude_weeks)
+    )
   order by
     coalesce(cs.avg_rating, 3) + (random() - 0.5) * 1.2 desc,
     cs.last_cooked_at asc nulls first,
@@ -636,6 +786,7 @@ as $$
     where rating is not null
     group by recipe_id
   ) cs on cs.recipe_id = r.id
+  where r.owner_id = auth.uid()
   order by cs.avg_rating desc, cs.n desc, r.created_at desc
   limit greatest(coalesce(limit_count, 6), 0);
 $$;
