@@ -167,8 +167,8 @@ create policy "own meal plan entries" on meal_plan_entries for all
 -- Friendships
 create policy "friendships involving me" on friendships for select
   using (auth.uid() = requester_id or auth.uid() = addressee_id);
-create policy "send friend request" on friendships for insert
-  with check (auth.uid() = requester_id and status = 'pending');
+-- No INSERT policy: send_friend_request() (security definer) is the only path,
+-- so email resolution / self-check / dedupe / auto-accept always run.
 -- No UPDATE policy: accepting goes through accept_friend_request() so the
 -- addressee can't also rewrite the requester/addressee in the same update.
 create policy "leave friendship" on friendships for delete
@@ -323,15 +323,20 @@ alter table tags enable row level security;
 create policy "anyone can read tags" on tags for select using (true);
 create policy "anyone can create tags" on tags for insert with check (true);
 
--- Auto-create a profile row when someone signs up
-create function public.handle_new_user()
-returns trigger as $$
+-- Auto-create a profile row when someone signs up. security definer with a
+-- pinned search_path (definer functions must not run with a mutable one).
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
 begin
   insert into public.profiles (id, display_name)
   values (new.id, coalesce(new.raw_user_meta_data->>'display_name', new.email));
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
 
 create trigger on_auth_user_created
   after insert on auth.users
