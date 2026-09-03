@@ -862,7 +862,8 @@ $$;
 -- ---------------------------------------------------------------------------
 create or replace function public.suggest_meals(
   exclude_weeks int default 2,
-  limit_count int default 5
+  limit_count int default 5,
+  exclude_recipe_ids uuid[] default '{}'
 )
 returns setof public.recipes
 language sql
@@ -881,6 +882,7 @@ as $$
   from public.recipes r
   left join cook_stats cs on cs.recipe_id = r.id
   where r.owner_id = auth.uid()
+    and not (r.id = any(coalesce(suggest_meals.exclude_recipe_ids, '{}')))
     and (
       suggest_meals.exclude_weeks <= 0
       or cs.last_cooked_at is null

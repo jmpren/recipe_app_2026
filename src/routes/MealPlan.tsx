@@ -15,6 +15,7 @@ import {
 import { listRecipes } from '../lib/recipes'
 import type { Recipe } from '../types'
 import { ProposalsPanel } from '../components/ProposalsPanel'
+import { SuggestMore } from '../components/SuggestMore'
 
 const SLOT_RANK: Record<MealSlot, number> = { dinner: 0, breakfast: 1, lunch: 2, snack: 3 }
 const DAY_FMT: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }
@@ -321,6 +322,15 @@ export function MealPlan() {
             )
           })}
         </ul>
+      )}
+
+      {entries !== null && (
+        <SuggestMore
+          weekRecipeIds={[...new Set((entries ?? []).map((e) => e.recipe.id))]}
+          days={days}
+          householdId={householdId}
+          onAdded={reload}
+        />
       )}
 
       {householdId && (

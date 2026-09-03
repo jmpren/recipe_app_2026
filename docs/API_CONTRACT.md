@@ -171,8 +171,10 @@ and the repeat-within-X-weeks exclusion rule, reading from `cook_logs` history.
 `security invoker`; also filters `owner_id = auth.uid()` explicitly (since Phase
 3 a friend's recipes are SELECT-visible, and suggestions must stay yours).
 **Input:** `exclude_weeks int` (default 2; `<= 0` disables the exclusion),
-`limit_count int` (default 5; clamped to `>= 0`). *(Named `limit_count`, not
-`limit`, which is a reserved word.)*
+`limit_count int` (default 5; clamped to `>= 0`), `exclude_recipe_ids uuid[]`
+(default `{}`; also dropped from the results — used by the "pick 1, suggest 3
+more" assist to skip what's already on the week's plan). *(Named `limit_count`,
+not `limit`, which is a reserved word.)*
 **Method:** exclude any recipe cooked within the last `exclude_weeks`; order the
 rest by `avg(cook_logs.rating)` (unrated treated as 3) plus a small random term
 so repeated calls rotate rather than repeat; tie-break on least-recently-cooked.

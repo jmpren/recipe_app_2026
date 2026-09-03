@@ -262,7 +262,7 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       when followed by a measurement unit), scaled numbers highlighted.
       `src/lib/scale.ts` — pure, client-side (see its header re: PLAN §3).
 
-### Phase 3 — Multi-user
+### Phase 3 — Multi-user — COMPLETE
 - [x] Expose the sign-up flow (auth infrastructure already exists from Phase 0)
       — magic link now creates accounts (`shouldCreateUser`), welcoming Login
       copy; `ProfileProvider` + `/profile` (rename display name, sign out);
@@ -287,7 +287,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       (propose → upvote → schedule onto a day). RPCs: `create_household`,
       `add_household_member`, `propose_meal`, `schedule_proposal`; `plan_meal`
       gained an optional `household_id`.
-- [ ] "Pick 1, suggest 3 more" meal-plan assist
+- [x] "Pick 1, suggest 3 more" meal-plan assist — `suggest_meals` gained
+      `exclude_recipe_ids`; a "Need ideas for this week?" panel on the calendar
+      offers well-rated recipes not already on the week, addable in one tap
+      (works for personal and household plans).
 
 ### Phase 4 — Bigger swings
 - [ ] AI-assisted "combine your riffs into a new recipe" suggestion

@@ -747,6 +747,26 @@ textarea.rb-field {
   padding: 4px 10px;
 }
 
+.rb-suggest-more {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rb-suggest-more__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rb-suggest-more__row .rb-button {
+  padding: 5px 12px;
+  flex: 0 0 auto;
+}
+
 .rb-linklike {
   font: inherit;
   color: var(--sage);
