@@ -656,7 +656,7 @@ export type Database = {
         }
       }
       add_household_member: {
-        Args: { household_id: string; member_user_id: string }
+        Args: { p_household_id: string; p_member_user_id: string }
         Returns: {
           household_id: string
           joined_at: string
@@ -781,57 +781,37 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      plan_meal:
-        | {
-            Args: { planned_on: string; recipe_id: string; slot?: string }
-            Returns: {
-              created_at: string
-              household_id: string | null
-              id: string
-              planned_on: string
-              position: number
-              recipe_id: string
-              slot: string
-              user_id: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "meal_plan_entries"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              household_id?: string
-              planned_on: string
-              recipe_id: string
-              slot?: string
-            }
-            Returns: {
-              created_at: string
-              household_id: string | null
-              id: string
-              planned_on: string
-              position: number
-              recipe_id: string
-              slot: string
-              user_id: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "meal_plan_entries"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      plan_meal: {
+        Args: {
+          household_id?: string
+          planned_on: string
+          recipe_id: string
+          slot?: string
+        }
+        Returns: {
+          created_at: string
+          household_id: string | null
+          id: string
+          planned_on: string
+          position: number
+          recipe_id: string
+          slot: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "meal_plan_entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       predicted_servings: { Args: { recipe_id: string }; Returns: Json }
       propose_meal: {
         Args: {
-          household_id: string
-          note?: string
-          recipe_id: string
-          week_start: string
+          p_household_id: string
+          p_note?: string
+          p_recipe_id: string
+          p_week_start: string
         }
         Returns: {
           created_at: string
@@ -850,7 +830,7 @@ export type Database = {
         }
       }
       schedule_proposal: {
-        Args: { planned_on: string; proposal_id: string; slot?: string }
+        Args: { p_planned_on: string; p_proposal_id: string; p_slot?: string }
         Returns: {
           created_at: string
           household_id: string | null
@@ -884,57 +864,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      suggest_meals:
-        | {
-            Args: { exclude_weeks?: number; limit_count?: number }
-            Returns: {
-              cook_minutes: number | null
-              created_at: string
-              description: string | null
-              id: string
-              image_url: string | null
-              owner_id: string
-              prep_minutes: number | null
-              servings: number | null
-              source_name: string | null
-              source_url: string | null
-              title: string
-              updated_at: string
-            }[]
-            SetofOptions: {
-              from: "*"
-              to: "recipes"
-              isOneToOne: false
-              isSetofReturn: true
-            }
-          }
-        | {
-            Args: {
-              exclude_recipe_ids?: string[]
-              exclude_weeks?: number
-              limit_count?: number
-            }
-            Returns: {
-              cook_minutes: number | null
-              created_at: string
-              description: string | null
-              id: string
-              image_url: string | null
-              owner_id: string
-              prep_minutes: number | null
-              servings: number | null
-              source_name: string | null
-              source_url: string | null
-              title: string
-              updated_at: string
-            }[]
-            SetofOptions: {
-              from: "*"
-              to: "recipes"
-              isOneToOne: false
-              isSetofReturn: true
-            }
-          }
+      suggest_meals: {
+        Args: {
+          exclude_recipe_ids?: string[]
+          exclude_weeks?: number
+          limit_count?: number
+        }
+        Returns: {
+          cook_minutes: number | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          owner_id: string
+          prep_minutes: number | null
+          servings: number | null
+          source_name: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "recipes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       top_rated_recipes: {
         Args: { limit_count?: number }
         Returns: {

@@ -203,8 +203,11 @@ create policy "own recipe riffs" on recipe_riffs for all
   using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
 create policy "own recipe tags" on recipe_tags for all
   using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
+-- Personal plan entries only; household entries use the "household plan: *"
+-- policies below (so leaving a household ends your access to its entries).
 create policy "own meal plan entries" on meal_plan_entries for all
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id and household_id is null)
+  with check (auth.uid() = user_id and household_id is null);
 
 -- Friendships
 create policy "friendships involving me" on friendships for select
@@ -986,44 +989,46 @@ begin
 end;
 $$;
 
-create or replace function public.add_household_member(household_id uuid, member_user_id uuid)
+-- Household RPC params are p_-prefixed: they'd otherwise collide with same-named
+-- table columns and trip plpgsql's variable_conflict = error ("column reference
+-- ... is ambiguous"). See …_fix_household_fn_param_names.sql.
+create or replace function public.add_household_member(p_household_id uuid, p_member_user_id uuid)
 returns public.household_members
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare v_user uuid := auth.uid(); v_row public.household_members;
 begin
   if v_user is null then raise exception 'add_household_member: not authenticated' using errcode = '28000'; end if;
-  if not public.is_household_owner(add_household_member.household_id, v_user) then
+  if not public.is_household_owner(p_household_id, v_user) then
     raise exception 'add_household_member: only the household owner can add members' using errcode = '42501';
   end if;
-  if not public.are_friends(v_user, add_household_member.member_user_id) then
+  if not public.are_friends(v_user, p_member_user_id) then
     raise exception 'add_household_member: you can only add your friends' using errcode = '42501';
   end if;
   insert into public.household_members (household_id, user_id, role)
-  values (add_household_member.household_id, add_household_member.member_user_id, 'member')
+  values (p_household_id, p_member_user_id, 'member')
   on conflict do nothing;
-  select * into v_row from public.household_members
-   where household_id = add_household_member.household_id and user_id = add_household_member.member_user_id;
+  select * into v_row from public.household_members m
+   where m.household_id = p_household_id and m.user_id = p_member_user_id;
   return v_row;
 end;
 $$;
 
 create or replace function public.propose_meal(
-  household_id uuid, recipe_id uuid, week_start date, note text default null
+  p_household_id uuid, p_recipe_id uuid, p_week_start date, p_note text default null
 )
 returns public.meal_proposals
 language plpgsql security invoker set search_path = public, pg_temp as $$
 declare v_user uuid := auth.uid(); v_row public.meal_proposals;
 begin
   if v_user is null then raise exception 'propose_meal: not authenticated' using errcode = '28000'; end if;
-  if not public.is_household_member(propose_meal.household_id, v_user) then
+  if not public.is_household_member(p_household_id, v_user) then
     raise exception 'propose_meal: not a member of that household' using errcode = '42501';
   end if;
-  if not exists (select 1 from public.recipes r where r.id = propose_meal.recipe_id) then
+  if not exists (select 1 from public.recipes r where r.id = p_recipe_id) then
     raise exception 'propose_meal: recipe not found' using errcode = 'P0002';
   end if;
   insert into public.meal_proposals (household_id, recipe_id, proposed_by, week_start, note)
-  values (propose_meal.household_id, propose_meal.recipe_id, v_user, propose_meal.week_start,
-          nullif(btrim(note), ''))
+  values (p_household_id, p_recipe_id, v_user, p_week_start, nullif(btrim(p_note), ''))
   on conflict (household_id, recipe_id, week_start) do nothing
   returning * into v_row;
   if v_row.id is null then
@@ -1034,13 +1039,13 @@ end;
 $$;
 
 create or replace function public.schedule_proposal(
-  proposal_id uuid, planned_on date, slot text default 'dinner'
+  p_proposal_id uuid, p_planned_on date, p_slot text default 'dinner'
 )
 returns public.meal_plan_entries
 language plpgsql security invoker set search_path = public, pg_temp as $$
 declare
   v_user uuid := auth.uid();
-  v_slot text := coalesce(nullif(btrim(slot), ''), 'dinner');
+  v_slot text := coalesce(nullif(btrim(p_slot), ''), 'dinner');
   v_p public.meal_proposals;
   v_entry public.meal_plan_entries;
 begin
@@ -1048,15 +1053,15 @@ begin
   if v_slot not in ('breakfast', 'lunch', 'dinner', 'snack') then
     raise exception 'schedule_proposal: invalid slot' using errcode = '23514';
   end if;
-  select * into v_p from public.meal_proposals where id = schedule_proposal.proposal_id;
+  select * into v_p from public.meal_proposals p where p.id = p_proposal_id;
   if v_p.id is null then raise exception 'schedule_proposal: proposal not found' using errcode = 'P0002'; end if;
   insert into public.meal_plan_entries (user_id, recipe_id, planned_on, slot, household_id, position)
-  values (v_user, v_p.recipe_id, schedule_proposal.planned_on, v_slot, v_p.household_id,
+  values (v_user, v_p.recipe_id, p_planned_on, v_slot, v_p.household_id,
     coalesce((select max(m.position) + 1 from public.meal_plan_entries m
       where m.household_id = v_p.household_id
-        and m.planned_on = schedule_proposal.planned_on and m.slot = v_slot), 0))
+        and m.planned_on = p_planned_on and m.slot = v_slot), 0))
   returning * into v_entry;
-  delete from public.meal_proposals where id = schedule_proposal.proposal_id;
+  delete from public.meal_proposals p where p.id = p_proposal_id;
   return v_entry;
 end;
 $$;

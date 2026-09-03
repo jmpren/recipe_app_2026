@@ -67,8 +67,8 @@ export async function getHouseholdMembers(householdId: string): Promise<Househol
 
 export async function addHouseholdMember(householdId: string, memberUserId: string): Promise<void> {
   const { error } = await supabase.rpc('add_household_member', {
-    household_id: householdId,
-    member_user_id: memberUserId,
+    p_household_id: householdId,
+    p_member_user_id: memberUserId,
   })
   if (error) throw error
 }
@@ -133,10 +133,10 @@ export async function proposeMeal(
   note = '',
 ): Promise<void> {
   const { error } = await supabase.rpc('propose_meal', {
-    household_id: householdId,
-    recipe_id: recipeId,
-    week_start: weekStartISO,
-    note: note.trim() || undefined,
+    p_household_id: householdId,
+    p_recipe_id: recipeId,
+    p_week_start: weekStartISO,
+    p_note: note.trim() || undefined,
   })
   if (error) throw error
 }
@@ -168,9 +168,9 @@ export async function scheduleProposal(
   slot: string,
 ): Promise<void> {
   const { error } = await supabase.rpc('schedule_proposal', {
-    proposal_id: proposalId,
-    planned_on: plannedOnISO,
-    slot,
+    p_proposal_id: proposalId,
+    p_planned_on: plannedOnISO,
+    p_slot: slot,
   })
   if (error) throw error
 }

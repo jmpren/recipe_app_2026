@@ -98,17 +98,20 @@ member and `position` is scoped to the household). Raises on no auth, missing
 - **`create_household(name text)` → `households`** — `security definer`; inserts
   the household and adds the caller as the `owner` member. Raises on no auth /
   blank name.
-- **`add_household_member(household_id uuid, member_user_id uuid)` →
+- **`add_household_member(p_household_id uuid, p_member_user_id uuid)` →
   `household_members`** — `security definer`; caller must be the household owner
-  **and** an accepted friend of `member_user_id`. Idempotent.
-- **`propose_meal(household_id uuid, recipe_id uuid, week_start date, note text)`
-  → `meal_proposals`** — `security invoker`; caller must be a member and able to
-  see the recipe. Unique per `(household, recipe, week_start)` — raises `23505`
-  on a repeat.
-- **`schedule_proposal(proposal_id uuid, planned_on date, slot text)` →
+  **and** an accepted friend of `p_member_user_id`. Idempotent.
+- **`propose_meal(p_household_id uuid, p_recipe_id uuid, p_week_start date,
+  p_note text)` → `meal_proposals`** — `security invoker`; caller must be a
+  member and able to see the recipe. Unique per `(household, recipe, week_start)`
+  — raises `23505` on a repeat.
+- **`schedule_proposal(p_proposal_id uuid, p_planned_on date, p_slot text)` →
   `meal_plan_entries`** — `security invoker`; creates a household plan entry from
   the proposal (recipe + household copied over, `user_id` = caller) and deletes
   the proposal.
+
+*(These four use `p_`-prefixed parameter names to avoid a plpgsql
+column/variable ambiguity — pass them as `p_household_id`, etc.)*
 **Voting / leaving / removing / renaming** are plain RLS-scoped table ops on
 `proposal_votes` / `household_members` / `households` — no contract entry.
 
