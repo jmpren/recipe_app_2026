@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Recipe Book">
+  <rect width="512" height="512" fill="#3F5B44"/>
+  <!-- content kept within the centre ~66% safe zone for maskable icons -->
+  <g transform="translate(256 256) scale(0.66) translate(-256 -256)">
+    <path d="M96 150c48-26 112-26 160 6v226c-48-32-112-32-160-6z" fill="#FAF7F1"/>
+    <path d="M416 150c-48-26-112-26-160 6v226c48-32 112-32 160-6z" fill="#FAF7F1"/>
+    <path d="M256 156v226" fill="none" stroke="#3F5B44" stroke-width="10" stroke-linecap="round"/>
+    <g fill="none" stroke="#C9A24B" stroke-width="12" stroke-linecap="round">
+      <path d="M132 196c34-14 74-14 100 2"/>
+      <path d="M132 240c34-14 74-14 100 2"/>
+      <path d="M132 284c34-14 74-14 100 2"/>
+      <path d="M380 196c-34-14-74-14-100 2"/>
+      <path d="M380 240c-34-14-74-14-100 2"/>
+      <path d="M380 284c-34-14-74-14-100 2"/>
+    </g>
+    <path d="M300 128h44v96l-22-18-22 18z" fill="#C9A24B"/>
+  </g>
+</svg>

@@ -1,11 +1,7 @@
--- Recipe Book — full schema snapshot
---
--- This is the hand-maintained picture of the whole database, kept in sync with
--- supabase/migrations/*.sql and docs/DATA_MODEL.md. The migrations are what
--- actually run (`supabase db push`); this file exists so the schema can be read
--- in one place (and by the future Swift / React Native clients).
---
--- Update this file in the same commit as any migration + docs/DATA_MODEL.md.
+-- Recipe Book — initial schema (base tables, RLS, profile trigger)
+-- Note: this project's remote DB was first seeded by running the old
+-- supabase/schema.sql by hand; this migration was marked applied with
+-- `supabase migration repair --status applied 20260902090000`.
 
 -- Profiles: one row per user, mirrors auth.users
 create table profiles (
@@ -46,8 +42,7 @@ create table recipe_steps (
   id uuid primary key default gen_random_uuid(),
   recipe_id uuid not null references recipes(id) on delete cascade,
   position int not null,
-  instruction text not null,
-  note text -- Phase 2 inline annotation: sticky-note on one step. NOT versioned, NOT a riff.
+  instruction text not null
 );
 
 -- Versions: the recipe's OFFICIAL edit history. A new row = a deliberate, permanent
@@ -72,20 +67,6 @@ create table cook_logs (
   notes text
 );
 
--- Riffs: retrospective, non-permanent variations. ONLY ever created from the
--- post-cook prompt (hence the required cook_log_id) — never speculative. Own table
--- (not part of recipe_versions) because riffs get social features later that
--- version history never will. what_changed is free text for MVP (see PLAN.md §9).
-create table recipe_riffs (
-  id uuid primary key default gen_random_uuid(),
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  cook_log_id uuid not null references cook_logs(id) on delete cascade,
-  created_by uuid not null references profiles(id) on delete cascade,
-  label text not null,
-  what_changed text,
-  created_at timestamptz not null default now()
-);
-
 -- Tags
 create table tags (
   id uuid primary key default gen_random_uuid(),
@@ -106,7 +87,6 @@ alter table recipe_ingredients enable row level security;
 alter table recipe_steps enable row level security;
 alter table recipe_versions enable row level security;
 alter table cook_logs enable row level security;
-alter table recipe_riffs enable row level security;
 alter table recipe_tags enable row level security;
 
 create policy "own profile" on profiles for all using (auth.uid() = id);
@@ -118,8 +98,6 @@ create policy "own recipe steps" on recipe_steps for all
 create policy "own recipe versions" on recipe_versions for all
   using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
 create policy "own cook logs" on cook_logs for all using (auth.uid() = user_id);
-create policy "own recipe riffs" on recipe_riffs for all
-  using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
 create policy "own recipe tags" on recipe_tags for all
   using (auth.uid() = (select owner_id from recipes where recipes.id = recipe_id));
 
@@ -141,36 +119,3 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
-
--- ---------------------------------------------------------------------------
--- Storage: recipe-photos bucket
--- Public read; authenticated users may write only under their own <uid>/ prefix.
--- Path convention: recipe-photos/<user-uid>/<recipe-id>/<file>
--- ---------------------------------------------------------------------------
-insert into storage.buckets (id, name, public)
-values ('recipe-photos', 'recipe-photos', true)
-on conflict (id) do nothing;
-
-create policy "recipe-photos public read" on storage.objects
-  for select using (bucket_id = 'recipe-photos');
-
-create policy "recipe-photos owner insert" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'recipe-photos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-create policy "recipe-photos owner update" on storage.objects
-  for update to authenticated
-  using (
-    bucket_id = 'recipe-photos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-create policy "recipe-photos owner delete" on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'recipe-photos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );

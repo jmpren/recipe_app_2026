@@ -5,7 +5,8 @@ for entity shape, written so a Swift or React Native implementation can be built
 accurately without reading React code. **Update this file in the same commit as any
 schema change.**
 
-Status: matches `supabase/schema.sql` as of Phase 0 setup.
+Status: matches `supabase/schema.sql` and `supabase/migrations/` as of Phase 0 setup
+(`…_initial_schema.sql`, `…_storage_recipe_photos.sql`).
 
 ---
 
@@ -113,11 +114,30 @@ usage patterns exist — table exists from Phase 0 but unused until then.
 | recipe_tags | recipe_id | uuid | References `recipes.id` |
 | recipe_tags | tag_id | uuid | References `tags.id` |
 
+## Storage
+
+### Bucket: `recipe-photos`
+Holds recipe photos. **Public read**; a signed-in user may write (insert / update /
+delete) only objects whose path begins with their own user id.
+
+| Property | Value |
+|---|---|
+| Bucket id / name | `recipe-photos` |
+| Public | Yes (read) |
+| Write access | `authenticated`, restricted to `<auth.uid()>/…` path prefix |
+| Path convention | `recipe-photos/<user-uid>/<recipe-id>/<file>` |
+
+`recipes.image_url` stores the public object URL
+(`https://<project>.supabase.co/storage/v1/object/public/recipe-photos/<user-uid>/<recipe-id>/<file>`)
+for the object in this bucket. Defined in the `…_storage_recipe_photos.sql` migration.
+
 ---
 
 ## Row Level Security summary
 Every table except `tags` is scoped so a user can only see/modify their own data
 (`owner_id` or `user_id` = `auth.uid()`, or joined through `recipe_id` back to the
-owning recipe). `tags` is public read/insert since tags are shared vocabulary, not
-per-user data. This is what makes Phase 3 (multi-user) require no new permission
-system — see PLAN.md Section 3.
+owning recipe). `recipe_riffs` is scoped through `recipe_id` to the owning recipe.
+`tags` is public read/insert since tags are shared vocabulary, not per-user data.
+The `recipe-photos` storage bucket is public-read, owner-write (see Storage above).
+This is what makes Phase 3 (multi-user) require no new permission system — see
+PLAN.md Section 3.

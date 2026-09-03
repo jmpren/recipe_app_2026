@@ -1,0 +1,139 @@
+/* Recipe Book — design tokens (PLAN.md Section 6) + base styles */
+
+:root {
+  --paper: #faf7f1;
+  --paper-raised: #fffdf8;
+  --ink: #23291f;
+  --ink-soft: #5c6152;
+  --sage: #3f5b44;
+  --sage-dark: #33492f;
+  --gold: #c9a24b;
+  --line: #e5ded0;
+  --danger: #9b3b2e;
+
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(35, 41, 31, 0.06), 0 8px 24px rgba(35, 41, 31, 0.08);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  line-height: 1.15;
+  margin: 0 0 0.4em;
+}
+
+h1 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+}
+
+a {
+  color: var(--sage);
+  text-underline-offset: 2px;
+}
+
+/* --- shared UI primitives (used by the auth screens for now) --- */
+
+.rb-center {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.rb-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+
+.rb-field {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.rb-field:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 1px;
+}
+
+.rb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font: inherit;
+  font-weight: 550;
+  color: var(--paper-raised);
+  background: var(--sage);
+  border: 1px solid var(--sage-dark);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rb-button:hover {
+  background: var(--sage-dark);
+}
+
+.rb-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rb-button--ghost {
+  color: var(--sage);
+  background: transparent;
+  border-color: var(--line);
+}
+
+.rb-button--ghost:hover {
+  background: var(--paper);
+}
+
+.rb-muted {
+  color: var(--ink-soft);
+}
+
+.rb-error {
+  color: var(--danger);
+}
