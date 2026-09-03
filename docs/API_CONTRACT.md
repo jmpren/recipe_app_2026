@@ -195,6 +195,22 @@ not copied into our Storage bucket.
 **Behaviour notes:** 10s fetch timeout, response capped at ~3 MB, sends a
 browser `User-Agent`.
 
+### `parse-recipe-text`
+**Status:** implemented (Phase 2)
+**Purpose:** Splits raw text (typically on-device OCR of a photographed recipe)
+into a rough `{ title, ingredients, steps }`. Heuristic: honours
+`Ingredients` / `Instructions`-style headers when present, otherwise splits the
+ingredient block from the method at the first numbered step or first long
+sentence. Pure text work (no network); shares the ingredient parser with
+`import-recipe-from-url` (`_shared/recipe-parse.ts`). `verify_jwt = true`.
+**Input:** `{ text: string }` (capped at 20k chars).
+**Output:** `{ found: boolean, title?: string,
+ingredients?: { quantity: number | null, unit: string | null, name: string, notes: string | null }[],
+steps?: string[] }`. `found` is false only for empty/unreadable input — the
+client always opens an editable form.
+**Note:** the OCR step is client-side (`tesseract.js`); it's platform-specific,
+so only this parsing half is shared.
+
 ### `combine-riffs` (Phase 4 — not yet scoped in detail)
 **Status:** planned (Phase 4)
 **Purpose:** AI-assisted synthesis of a recipe's riff history into a suggested new

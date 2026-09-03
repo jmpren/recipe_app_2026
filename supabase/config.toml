@@ -390,6 +390,11 @@ deno_version = 2
 enabled = true
 verify_jwt = true
 
+# Splits raw text (from on-device OCR) into a rough recipe. Pure text work.
+[functions.parse-recipe-text]
+enabled = true
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

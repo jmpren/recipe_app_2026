@@ -217,7 +217,7 @@ Definition of done: you can fully replace however you currently save recipes tod
 Explicitly OUT of MVP: meal planning, shopping lists, favorites/repeat-limit logic,
 metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 
-### Phase 2 — Personal power features
+### Phase 2 — Personal power features — COMPLETE
 - [x] Metric ⇄ imperial conversion (`convert_measurement(s)` RPC; Original/Metric/
       Imperial toggle on the recipe detail ingredient list, display-only)
 - [x] Inline step notes (the `recipe_steps.note` field, NYT-style) — add/edit
@@ -245,7 +245,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       link, lowercased, not versioned); tag chips + add field on the recipe
       detail page; a tag-chip filter (AND) on the recipe list, tags shown on
       cards. Uses the Phase 0 `tags` / `recipe_tags` tables.
-- [ ] Camera scan → OCR → editable recipe form
+- [x] Camera scan → OCR → editable recipe form — "Scan a photo" on the Add
+      Recipe page: on-device OCR (`tesseract.js`, lazy-loaded) → `parse-recipe-text`
+      Edge Function (shared heuristic, `_shared/recipe-parse.ts`) → pre-filled,
+      fully editable RecipeForm.
 - [x] Number-recognition scaling in steps (e.g. "1/4 cup" → dropdown to adjust)
       — ½×/1×/1½×/2×/3× scaler on the recipe detail page and in cooking mode;
       scales the ingredient list and amounts recognised in step prose (only

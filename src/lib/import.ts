@@ -47,22 +47,45 @@ export async function importRecipeFromUrl(url: string): Promise<ImportOutcome> {
     console.error('recipe import failed', e)
   }
 
-  if (result.found) {
-    if (result.title) draft.title = result.title
-    if (result.description) draft.description = result.description
-    if (result.servings != null) draft.servings = String(result.servings)
-    if (result.ingredients?.length) {
-      draft.ingredients = result.ingredients.map((i) => ({
-        quantity: i.quantity != null ? String(i.quantity) : '',
-        unit: i.unit ?? '',
-        name: i.name,
-        notes: i.notes ?? '',
-      }))
-    }
-    if (result.steps?.length) {
-      draft.steps = result.steps.map((s) => ({ instruction: s }))
-    }
-  }
+  if (result.found) applyToDraft(draft, result)
 
   return { draft, found: result.found, imageUrl: result.image_url ?? null }
+}
+
+function applyToDraft(draft: RecipeDraft, result: ImportResult): void {
+  if (result.title) draft.title = result.title
+  if (result.description) draft.description = result.description
+  if (result.servings != null) draft.servings = String(result.servings)
+  if (result.ingredients?.length) {
+    draft.ingredients = result.ingredients.map((i) => ({
+      quantity: i.quantity != null ? String(i.quantity) : '',
+      unit: i.unit ?? '',
+      name: i.name,
+      notes: i.notes ?? '',
+    }))
+  }
+  if (result.steps?.length) {
+    draft.steps = result.steps.map((s) => ({ instruction: s }))
+  }
+}
+
+/**
+ * Turn OCR'd text into a draft via the parse-recipe-text Edge Function (the
+ * shared heuristic; PLAN.md §3). Never throws — an empty/failed parse just
+ * yields a blank draft.
+ */
+export async function parseScannedText(text: string): Promise<{ draft: RecipeDraft; found: boolean }> {
+  const draft = emptyDraft()
+  let result: ImportResult = { found: false }
+  try {
+    const { data, error } = await supabase.functions.invoke<ImportResult>('parse-recipe-text', {
+      body: { text },
+    })
+    if (error) throw error
+    if (data) result = data
+  } catch (e) {
+    console.error('recipe scan parse failed', e)
+  }
+  if (result.found) applyToDraft(draft, result)
+  return { draft, found: result.found }
 }
