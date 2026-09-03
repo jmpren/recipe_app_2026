@@ -453,3 +453,217 @@ textarea.rb-field {
   border: 1px solid var(--line);
   border-radius: 8px;
 }
+
+/* --- cooking mode (full-page, no app chrome, large type) --- */
+
+.rb-cook {
+  min-height: 100dvh;
+  background: var(--paper);
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+.rb-cook.rb-muted {
+  padding: 28px 20px;
+}
+
+.rb-cook-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--line);
+}
+
+.rb-cook-bar__title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 560;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rb-cook-exit {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.rb-cook-exit:hover {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.rb-cook-body {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px calc(96px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.rb-cook-ingredients {
+  padding: 16px 18px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.rb-cook-ingredient-list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rb-cook-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  counter-reset: none;
+}
+
+.rb-cook-step {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+
+.rb-cook-step__tap {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.rb-cook-step__check {
+  flex: 0 0 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--sage);
+  border: 2px solid var(--sage);
+  border-radius: 50%;
+}
+
+.rb-cook-step__text {
+  flex: 1;
+  padding-top: 2px;
+  font-size: 1.3rem;
+}
+
+.rb-cook-step--done {
+  opacity: 0.55;
+}
+
+.rb-cook-step--done .rb-cook-step__check {
+  color: var(--paper-raised);
+  background: var(--sage);
+}
+
+.rb-cook-step--done .rb-cook-step__text {
+  text-decoration: line-through;
+}
+
+.rb-cook-timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 14px 64px;
+  font-size: 1rem;
+}
+
+.rb-cook-timer .rb-button {
+  padding: 7px 14px;
+}
+
+.rb-cook-timer__clock {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  font-weight: 560;
+  color: var(--sage);
+}
+
+.rb-cook-timer--done .rb-cook-timer__clock {
+  color: var(--danger);
+}
+
+.rb-cook-fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 6;
+  padding: 13px 20px;
+  font: inherit;
+  font-weight: 550;
+  color: var(--paper-raised);
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.rb-cook-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(35, 41, 31, 0.4);
+}
+
+.rb-cook-sheet {
+  width: 100%;
+  max-width: 720px;
+  max-height: 75dvh;
+  overflow-y: auto;
+  padding: 20px 22px calc(24px + env(safe-area-inset-bottom));
+  background: var(--paper-raised);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.rb-cook-sheet__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .rb-cook-sheet-backdrop {
+    align-items: center;
+  }
+  .rb-cook-sheet {
+    border-radius: var(--radius);
+  }
+}

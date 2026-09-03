@@ -83,6 +83,9 @@ export function RecipeDetail() {
       </header>
 
       <div className="rb-form-actions">
+        <Link className="rb-button" to={`/recipes/${recipe.id}/cook`}>
+          Cook this
+        </Link>
         <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/edit`}>
           Edit
         </Link>
