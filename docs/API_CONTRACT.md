@@ -91,6 +91,21 @@ Raises on no auth, missing `recipe_id`/`planned_on`, a bad `slot`, or a
 **Output:** the created `meal_plan_entries` row.
 **Removal / reads** are plain table ops (RLS-scoped), no contract entry.
 
+### `build_shopping_list`
+**Status:** implemented (Phase 2)
+**Purpose:** Consolidates `recipe_ingredients` across a set of recipes into one
+shopping list. `stable`, `security invoker` — recipe ids the caller doesn't own
+contribute nothing. Ephemeral: there is no shopping-list table; the client keeps
+the working list.
+**Input:** `recipe_ids uuid[]`
+**Method:** group by `lower(btrim(name))` + `lower(btrim(unit))` (empty unit →
+null; no plural folding, so `cup` and `cups` stay separate); `quantity` is the
+sum of the non-null amounts (null if none); `has_unmeasured` flags a folded-in
+row with no amount.
+**Output:** `jsonb` array of `{ name: string, unit: string | null,
+quantity: number | null, has_unmeasured: boolean, count: int, recipes: string[] }`,
+ordered by name then unit.
+
 ### `promote_riff_to_version`
 **Status:** planned (Phase 1)
 **Purpose:** Takes a riff and creates a new permanent `recipe_versions` entry from

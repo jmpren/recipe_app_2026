@@ -13,6 +13,9 @@ export function AppLayout() {
           <NavLink to="/plan" className="rb-button rb-button--ghost">
             Plan
           </NavLink>
+          <NavLink to="/shopping" className="rb-button rb-button--ghost">
+            Shopping
+          </NavLink>
           <NavLink to="/suggestions" className="rb-button rb-button--ghost">
             Suggestions
           </NavLink>

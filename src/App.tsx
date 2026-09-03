@@ -10,6 +10,7 @@ import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
 import { RecipeList } from './routes/RecipeList'
 import { RecipeNew } from './routes/RecipeNew'
+import { ShoppingList } from './routes/ShoppingList'
 import { Suggestions } from './routes/Suggestions'
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<RecipeList />} />
           <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/plan" element={<MealPlan />} />
+          <Route path="/shopping" element={<ShoppingList />} />
           <Route path="/recipes/new" element={<RecipeNew />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeEdit />} />

@@ -237,7 +237,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       `plan_meal` RPC; week view at `/plan` (day + slot, slot defaults to
       dinner), plus "Add to plan" on the recipe detail page. Per-user;
       collaboration is Phase 3.
-- [ ] Shopping list generated from a set of selected recipes
+- [x] Shopping list generated from a set of selected recipes —
+      `build_shopping_list(recipe_ids[])` RPC (merges by name+unit) + a
+      `/shopping` page (pick recipes, check items off; working list kept in
+      localStorage). "Shopping list for this week" button on `/plan`.
 - [ ] Tags/filtering (introduce once real usage patterns exist)
 - [ ] Camera scan → OCR → editable recipe form
 - [ ] Number-recognition scaling in steps (e.g. "1/4 cup" → dropdown to adjust)

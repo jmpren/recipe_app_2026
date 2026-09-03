@@ -667,6 +667,48 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- RPC: build_shopping_list(recipe_ids uuid[]) -> jsonb
+-- Consolidates recipe_ingredients across recipes into one list, grouped by
+-- normalised name + unit, amounts summed, source recipes noted (Phase 2).
+-- stable, security invoker; ephemeral (no table). Line shape:
+-- { name, unit, quantity, has_unmeasured, count, recipes[] }. See
+-- docs/API_CONTRACT.md and the …_build_shopping_list_rpc.sql migration.
+-- ---------------------------------------------------------------------------
+create or replace function public.build_shopping_list(recipe_ids uuid[])
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  with ing as (
+    select
+      lower(btrim(ri.name)) as key_name,
+      nullif(lower(btrim(ri.unit)), '') as key_unit,
+      btrim(ri.name) as disp_name,
+      ri.quantity,
+      r.title as recipe_title
+    from public.recipe_ingredients ri
+    join public.recipes r on r.id = ri.recipe_id
+    where ri.recipe_id = any(recipe_ids)
+      and nullif(btrim(ri.name), '') is not null
+  ),
+  grouped as (
+    select
+      min(disp_name) as name,
+      key_unit as unit,
+      sum(quantity) as quantity,
+      bool_or(quantity is null) as has_unmeasured,
+      count(*)::int as count,
+      jsonb_agg(distinct recipe_title order by recipe_title) as recipes
+    from ing
+    group by key_name, key_unit
+  )
+  select coalesce(jsonb_agg(to_jsonb(grouped) order by grouped.name, grouped.unit), '[]'::jsonb)
+  from grouped;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Storage: recipe-photos bucket
 -- Public read; authenticated users may write only under their own <uid>/ prefix.
 -- Path convention: recipe-photos/<user-uid>/<recipe-id>/<file>

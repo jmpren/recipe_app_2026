@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { addDays, startOfWeek, toISODate, today } from '../lib/dates'
 import {
   getPlan,
@@ -17,6 +17,7 @@ const DAY_FMT: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', 
 const RANGE_FMT: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
 
 export function MealPlan() {
+  const navigate = useNavigate()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(today()))
   const [nonce, setNonce] = useState(0)
   const [entries, setEntries] = useState<MealPlanEntry[] | null>(null)
@@ -138,10 +139,25 @@ export function MealPlan() {
         </div>
       </div>
 
-      <p className="rb-muted">
-        {weekStart.toLocaleDateString(undefined, RANGE_FMT)} –{' '}
-        {weekEnd.toLocaleDateString(undefined, RANGE_FMT)}
-      </p>
+      <div className="rb-plan-subhead">
+        <p className="rb-muted">
+          {weekStart.toLocaleDateString(undefined, RANGE_FMT)} –{' '}
+          {weekEnd.toLocaleDateString(undefined, RANGE_FMT)}
+        </p>
+        {(entries?.length ?? 0) > 0 && (
+          <button
+            type="button"
+            className="rb-button rb-button--ghost"
+            onClick={() =>
+              navigate('/shopping', {
+                state: { recipeIds: [...new Set((entries ?? []).map((e) => e.recipe.id))] },
+              })
+            }
+          >
+            Shopping list for this week
+          </button>
+        )}
+      </div>
 
       {error && <p className="rb-error">{error}</p>}
 

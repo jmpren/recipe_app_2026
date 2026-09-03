@@ -179,6 +179,7 @@ a.rb-button:hover {
 
 .rb-header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -719,6 +720,75 @@ textarea.rb-field {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+}
+
+.rb-plan-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: -8px;
+}
+
+.rb-plan-subhead p {
+  margin: 0;
+}
+
+/* --- shopping list --- */
+
+.rb-shop-recipes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rb-shop-picker {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.rb-shop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rb-shop-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rb-shop-item label {
+  cursor: pointer;
+}
+
+.rb-shop-item__amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+}
+
+.rb-shop-item__from {
+  font-size: 12px;
+  padding-left: 24px;
+}
+
+.rb-shop-item.is-checked label {
+  color: var(--ink-soft);
+  text-decoration: line-through;
 }
 
 /* In cooking mode the step card has no padding of its own — inset the note UI

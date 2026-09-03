@@ -407,6 +407,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      build_shopping_list: { Args: { recipe_ids: string[] }; Returns: Json }
       convert_measurement: {
         Args: { quantity: number; target: string; unit: string }
         Returns: Json
