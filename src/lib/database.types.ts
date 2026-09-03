@@ -426,6 +426,39 @@ export type Database = {
           },
         ]
       }
+      riff_likes: {
+        Row: {
+          created_at: string
+          riff_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          riff_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          riff_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "riff_likes_riff_id_fkey"
+            columns: ["riff_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_riffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riff_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           id: string
@@ -477,6 +510,7 @@ export type Database = {
       }
       are_friends: { Args: { a: string; b: string }; Returns: boolean }
       build_shopping_list: { Args: { recipe_ids: string[] }; Returns: Json }
+      can_see_riff: { Args: { p_riff_id: string }; Returns: boolean }
       convert_measurement: {
         Args: { quantity: number; target: string; unit: string }
         Returns: Json

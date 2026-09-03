@@ -274,7 +274,12 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       `/friends/:id` (their recipes); recipe detail renders read-only for a
       friend's recipe. `suggest_meals` / `top_rated_recipes` re-scoped to
       `owner_id = auth.uid()`.
-- [ ] Riff "likes" and viewing others' riffs as remix suggestions
+- [x] Riff "likes" and viewing others' riffs as remix suggestions —
+      `riff_likes` table + RLS (`can_see_riff`); the recipe-detail riffs list
+      shows each riff's author + a ♥ toggle with count; you can like any riff
+      you can see (yours or a friend's). (Friends riffing *on your* recipe —
+      i.e. cooking a shared recipe and adding a riff — is still deferred; it
+      needs friend cook/log re-enabled.)
 - [ ] Collaborative family meal planning (suggest → vote → add to shared plan)
 - [ ] "Pick 1, suggest 3 more" meal-plan assist
 

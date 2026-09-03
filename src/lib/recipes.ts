@@ -105,15 +105,66 @@ export async function listVersions(recipeId: string): Promise<RecipeVersionSumma
   return (data ?? []).map((v) => ({ ...v, snapshot: v.snapshot as unknown as VersionSnapshot }))
 }
 
-export async function listRiffs(recipeId: string): Promise<RecipeRiff[]> {
+export interface RiffView {
+  id: string
+  label: string
+  whatChanged: string | null
+  createdAt: string
+  authorId: string
+  authorName: string
+  likeCount: number
+  likedByMe: boolean
+}
+
+interface RiffRow {
+  id: string
+  label: string
+  what_changed: string | null
+  created_at: string
+  created_by: string
+  author: { display_name: string } | null
+  riff_likes: { user_id: string }[]
+}
+
+/** Riffs on a recipe (yours or a friend's), each with author + like info. */
+export async function listRiffs(recipeId: string): Promise<RiffView[]> {
   const { data, error } = await supabase
     .from('recipe_riffs')
-    .select('*')
+    .select(
+      'id, label, what_changed, created_at, created_by, ' +
+        'author:profiles!recipe_riffs_created_by_fkey(display_name), riff_likes(user_id)',
+    )
     .eq('recipe_id', recipeId)
     .order('created_at', { ascending: false })
-
   if (error) throw error
-  return data ?? []
+
+  const myId = (await supabase.auth.getSession()).data.session?.user.id ?? ''
+  return ((data ?? []) as unknown as RiffRow[]).map((r) => ({
+    id: r.id,
+    label: r.label,
+    whatChanged: r.what_changed,
+    createdAt: r.created_at,
+    authorId: r.created_by,
+    authorName: r.author?.display_name ?? 'Someone',
+    likeCount: r.riff_likes.length,
+    likedByMe: r.riff_likes.some((l) => l.user_id === myId),
+  }))
+}
+
+export async function likeRiff(riffId: string): Promise<void> {
+  const uid = await currentUserId()
+  const { error } = await supabase.from('riff_likes').insert({ riff_id: riffId, user_id: uid })
+  if (error && error.code !== '23505') throw error // 23505 = already liked
+}
+
+export async function unlikeRiff(riffId: string): Promise<void> {
+  const uid = await currentUserId()
+  const { error } = await supabase
+    .from('riff_likes')
+    .delete()
+    .eq('riff_id', riffId)
+    .eq('user_id', uid)
+  if (error) throw error
 }
 
 /**

@@ -9,14 +9,17 @@ import { getPersonName } from '../lib/friends'
 import {
   deleteRecipe,
   getRecipe,
+  likeRiff,
   listRiffs,
   listVersions,
   setRecipeServings,
   setStepNote,
+  unlikeRiff,
+  type RiffView,
 } from '../lib/recipes'
 import { SCALE_FACTORS, scaleFactorLabel, scaleStepText } from '../lib/scale'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
-import type { RecipeIngredient, RecipeRiff, RecipeVersionSummary, RecipeWithDetail } from '../types'
+import type { RecipeIngredient, RecipeVersionSummary, RecipeWithDetail } from '../types'
 
 const UNIT_SYSTEMS: UnitSystem[] = ['original', 'metric', 'imperial']
 
@@ -31,7 +34,7 @@ export function RecipeDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [recipe, setRecipe] = useState<RecipeWithDetail | null | undefined>(undefined)
-  const [riffs, setRiffs] = useState<RecipeRiff[]>([])
+  const [riffs, setRiffs] = useState<RiffView[]>([])
   const [riffsOpen, setRiffsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -205,6 +208,26 @@ export function RecipeDetail() {
       setServingsHint(null)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Couldn’t update servings')
+    }
+  }
+
+  async function toggleRiffLike(riff: RiffView) {
+    const nextLiked = !riff.likedByMe
+    const delta = nextLiked ? 1 : -1
+    setRiffs((rs) =>
+      rs.map((r) =>
+        r.id === riff.id ? { ...r, likedByMe: nextLiked, likeCount: r.likeCount + delta } : r,
+      ),
+    )
+    try {
+      if (nextLiked) await likeRiff(riff.id)
+      else await unlikeRiff(riff.id)
+    } catch {
+      setRiffs((rs) =>
+        rs.map((r) =>
+          r.id === riff.id ? { ...r, likedByMe: !nextLiked, likeCount: r.likeCount - delta } : r,
+        ),
+      )
     }
   }
 
@@ -435,8 +458,22 @@ export function RecipeDetail() {
             ) : (
               riffs.map((riff) => (
                 <div key={riff.id} className="rb-riff">
-                  <strong>{riff.label}</strong>
-                  {riff.what_changed && <p className="rb-muted">{riff.what_changed}</p>}
+                  <div className="rb-riff__head">
+                    <strong>{riff.label}</strong>
+                    <button
+                      type="button"
+                      className={`rb-riff__like${riff.likedByMe ? ' is-on' : ''}`}
+                      aria-pressed={riff.likedByMe}
+                      aria-label={riff.likedByMe ? 'Remove like' : 'Like this riff'}
+                      onClick={() => toggleRiffLike(riff)}
+                    >
+                      ♥{riff.likeCount > 0 ? ` ${riff.likeCount}` : ''}
+                    </button>
+                  </div>
+                  {riff.whatChanged && <p className="rb-muted">{riff.whatChanged}</p>}
+                  <p className="rb-riff__by">
+                    by {riff.authorId === user?.id ? 'you' : riff.authorName}
+                  </p>
                 </div>
               ))
             )}

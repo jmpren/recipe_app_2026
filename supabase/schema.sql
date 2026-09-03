@@ -86,6 +86,15 @@ create table recipe_riffs (
   created_at timestamptz not null default now()
 );
 
+-- Riff likes (Phase 3): a like by anyone who can see the riff.
+create table riff_likes (
+  riff_id uuid not null references recipe_riffs(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (riff_id, user_id)
+);
+create index riff_likes_riff_idx on riff_likes (riff_id);
+
 -- Tags
 create table tags (
   id uuid primary key default gen_random_uuid(),
@@ -137,6 +146,7 @@ alter table recipe_riffs enable row level security;
 alter table recipe_tags enable row level security;
 alter table meal_plan_entries enable row level security;
 alter table friendships enable row level security;
+alter table riff_likes enable row level security;
 
 create policy "own profile" on profiles for all using (auth.uid() = id);
 create policy "own recipes" on recipes for all using (auth.uid() = owner_id);
@@ -205,6 +215,28 @@ create policy "friends read recipe riffs" on recipe_riffs for select
   using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
 create policy "friends read recipe tags" on recipe_tags for select
   using (public.are_friends(auth.uid(), (select owner_id from recipes where recipes.id = recipe_id)));
+
+-- Riff likes: visible to / addable by anyone who can see the riff.
+create or replace function public.can_see_riff(p_riff_id uuid)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from public.recipe_riffs rr
+    join public.recipes r on r.id = rr.recipe_id
+    where rr.id = p_riff_id
+      and (r.owner_id = auth.uid() or public.are_friends(auth.uid(), r.owner_id))
+  );
+$$;
+create policy "read visible riff likes" on riff_likes for select
+  using (public.can_see_riff(riff_id));
+create policy "add own riff like" on riff_likes for insert
+  with check (user_id = auth.uid() and public.can_see_riff(riff_id));
+create policy "remove own riff like" on riff_likes for delete
+  using (user_id = auth.uid());
 
 -- send_friend_request(email) -> friendships. security definer to resolve the
 -- email via auth.users. Auto-accepts if that person already has a request out

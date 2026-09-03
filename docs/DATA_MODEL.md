@@ -103,6 +103,11 @@ friends' riffs) that version history never will.
 | what_changed | jsonb or text | Structured diff or free text — MVP starts free text (see open questions in PLAN.md) |
 | created_at | timestamptz | |
 
+## riff_likes
+A like on a riff (Phase 3), one row per (riff, user). PK `(riff_id, user_id)`.
+RLS: readable / insertable by anyone who can see the riff (`can_see_riff` —
+the recipe owner or an accepted friend of theirs); delete your own only.
+
 ## tags / recipe_tags
 Shared/global tags, many-to-many with recipes. Tables exist from Phase 0; wired
 up in Phase 2. `tags.name` is stored lowercased and unique; `tags` is public

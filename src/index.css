@@ -1021,6 +1021,36 @@ textarea.rb-field {
   border-radius: 8px;
 }
 
+.rb-riff__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rb-riff__like {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.rb-riff__like.is-on {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.rb-riff__by {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
 /* --- cooking mode (full-page, no app chrome, large type) --- */
 
 .rb-cook {
