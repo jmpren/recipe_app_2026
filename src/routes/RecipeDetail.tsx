@@ -12,6 +12,7 @@ import {
   setRecipeServings,
   setStepNote,
 } from '../lib/recipes'
+import { SCALE_FACTORS, scaleFactorLabel, scaleStepText } from '../lib/scale'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
 import type { RecipeIngredient, RecipeRiff, RecipeVersionSummary, RecipeWithDetail } from '../types'
 
@@ -39,6 +40,7 @@ export function RecipeDetail() {
   const [versions, setVersions] = useState<RecipeVersionSummary[]>([])
   const [versionView, setVersionView] = useState<'current' | 'original'>('current')
   const [servingsHint, setServingsHint] = useState<ServingsSuggestion | null>(null)
+  const [scale, setScale] = useState(1)
 
   async function handleDelete() {
     if (!window.confirm('Delete this recipe? This can’t be undone.')) return
@@ -71,6 +73,7 @@ export function RecipeDetail() {
         setConverted({})
         setConvertError(null)
         setVersionView('current')
+        setScale(1)
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : 'Failed to load recipe')
@@ -137,12 +140,28 @@ export function RecipeDetail() {
     servingsHint != null &&
     (recipe.servings == null || servingsHint.suggestedServings !== recipe.servings)
 
+  function scaledAmount(quantity: number | null, unit: string | null): string {
+    return formatAmount(quantity != null ? quantity * scale : null, unit)
+  }
+
   function ingredientAmount(index: number, ing: RecipeIngredient): string {
     if (unitSystem !== 'original') {
       const c = converted[unitSystem]?.[index]
-      if (c) return formatAmount(c.quantity, c.unit)
+      if (c) return scaledAmount(c.quantity, c.unit)
     }
-    return formatAmount(ing.quantity, ing.unit)
+    return scaledAmount(ing.quantity, ing.unit)
+  }
+
+  function renderStepText(instruction: string) {
+    return scaleStepText(instruction, scale).segments.map((seg, i) =>
+      seg.scaled ? (
+        <mark key={i} className="rb-scaled">
+          {seg.text}
+        </mark>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    )
   }
 
   async function applySuggestedServings(n: number) {
@@ -255,6 +274,25 @@ export function RecipeDetail() {
 
       {recipe.description && <p>{recipe.description}</p>}
 
+      {(recipe.recipe_ingredients.length > 0 || recipe.recipe_steps.length > 0) && (
+        <div className="rb-section-head">
+          <span className="rb-muted">Scale</span>
+          <div className="rb-unit-toggle" role="group" aria-label="Scale recipe">
+            {SCALE_FACTORS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                className={`rb-unit-toggle__opt${scale === f ? ' is-on' : ''}`}
+                aria-pressed={scale === f}
+                onClick={() => setScale(f)}
+              >
+                {scaleFactorLabel(f)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <section>
         <div className="rb-section-head">
           <h2>Ingredients</h2>
@@ -285,7 +323,7 @@ export function RecipeDetail() {
             <ul className="rb-ingredient-list">
               {snapshotIngredients.map((ing, i) => (
                 <li key={i}>
-                  <span className="rb-ingredient-qty">{formatAmount(ing.quantity, ing.unit)}</span>{' '}
+                  <span className="rb-ingredient-qty">{scaledAmount(ing.quantity, ing.unit)}</span>{' '}
                   {ing.name}
                   {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
                 </li>
@@ -316,7 +354,7 @@ export function RecipeDetail() {
             <ol className="rb-step-list">
               {snapshotSteps.map((step, i) => (
                 <li key={i}>
-                  <p>{step.instruction}</p>
+                  <p>{renderStepText(step.instruction)}</p>
                   {step.note && <p className="rb-step-note">{step.note}</p>}
                 </li>
               ))}
@@ -328,7 +366,7 @@ export function RecipeDetail() {
           <ol className="rb-step-list">
             {recipe.recipe_steps.map((step) => (
               <li key={step.id}>
-                <p>{step.instruction}</p>
+                <p>{renderStepText(step.instruction)}</p>
                 <StepNoteEditor
                   note={step.note}
                   onSave={(note) => saveStepNote(step.id, note)}

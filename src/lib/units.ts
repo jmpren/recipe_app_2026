@@ -39,19 +39,57 @@ const FRACTIONS: [number, string][] = [
   [7 / 8, '⅞'],
 ]
 
+export const UNICODE_FRACTIONS: Record<string, number> = {
+  '½': 1 / 2,
+  '⅓': 1 / 3,
+  '⅔': 2 / 3,
+  '¼': 1 / 4,
+  '¾': 3 / 4,
+  '⅕': 1 / 5,
+  '⅖': 2 / 5,
+  '⅗': 3 / 5,
+  '⅘': 4 / 5,
+  '⅙': 1 / 6,
+  '⅚': 5 / 6,
+  '⅛': 1 / 8,
+  '⅜': 3 / 8,
+  '⅝': 5 / 8,
+  '⅞': 7 / 8,
+}
+
+/** A bare amount as a nice string: `1.5` → `1½`, `0.333` → `⅓`, else 2dp. */
+export function formatQty(n: number): string {
+  const whole = Math.floor(n)
+  const frac = n - whole
+  const near = FRACTIONS.find(([v]) => Math.abs(frac - v) < 0.02)
+  if (near) return (whole > 0 ? String(whole) : '') + near[1]
+  if (Math.abs(frac) < 0.02) return String(whole)
+  return String(Math.round(n * 100) / 100)
+}
+
+/** Parse a bare amount: `1 1/2`, `1/2`, `1½`, `½`, `0.5`, `2`. */
+export function parseQty(raw: string): number | null {
+  const s = raw.trim().replace(',', '.')
+  if (!s) return null
+
+  const uni = s.match(/^(\d+)?\s*([½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])$/)
+  if (uni) return (uni[1] ? parseInt(uni[1], 10) : 0) + (UNICODE_FRACTIONS[uni[2]] ?? 0)
+
+  const mixed = s.match(/^(\d+)\s+(\d+)\/(\d+)$/)
+  if (mixed) return parseInt(mixed[1], 10) + parseInt(mixed[2], 10) / parseInt(mixed[3], 10)
+
+  const frac = s.match(/^(\d+)\/(\d+)$/)
+  if (frac) return parseInt(frac[1], 10) / parseInt(frac[2], 10)
+
+  const dec = s.match(/^\d+(?:\.\d+)?$/)
+  if (dec) return parseFloat(dec[0])
+
+  return null
+}
+
 /** "1.5" + "cup" → "1½ cup"; "0.333" → "⅓"; leaves odd decimals as 2dp. */
 export function formatAmount(quantity: number | null, unit: string | null): string {
   const u = unit ?? ''
   if (quantity == null) return u
-
-  const whole = Math.floor(quantity)
-  const frac = quantity - whole
-  const near = FRACTIONS.find(([v]) => Math.abs(frac - v) < 0.02)
-
-  let q: string
-  if (near) q = (whole > 0 ? String(whole) : '') + near[1]
-  else if (Math.abs(frac) < 0.02) q = String(whole)
-  else q = String(Math.round(quantity * 100) / 100)
-
-  return [q, u].join(' ').trim()
+  return [formatQty(quantity), u].join(' ').trim()
 }

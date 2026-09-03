@@ -870,6 +870,14 @@ textarea.rb-field {
   border-color: var(--sage-dark);
 }
 
+/* a step amount that the scaler changed */
+.rb-scaled {
+  color: inherit;
+  background: color-mix(in srgb, var(--gold) 24%, transparent);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
 /* In cooking mode the step card has no padding of its own — inset the note UI
    so it lines up with the step text. */
 .rb-cook-step__notes {
@@ -963,6 +971,14 @@ textarea.rb-field {
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.rb-cook-scale {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
 }
 
 .rb-cook-ingredients {

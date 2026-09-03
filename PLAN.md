@@ -246,7 +246,11 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       detail page; a tag-chip filter (AND) on the recipe list, tags shown on
       cards. Uses the Phase 0 `tags` / `recipe_tags` tables.
 - [ ] Camera scan → OCR → editable recipe form
-- [ ] Number-recognition scaling in steps (e.g. "1/4 cup" → dropdown to adjust)
+- [x] Number-recognition scaling in steps (e.g. "1/4 cup" → dropdown to adjust)
+      — ½×/1×/1½×/2×/3× scaler on the recipe detail page and in cooking mode;
+      scales the ingredient list and amounts recognised in step prose (only
+      when followed by a measurement unit), scaled numbers highlighted.
+      `src/lib/scale.ts` — pure, client-side (see its header re: PLAN §3).
 
 ### Phase 3 — Multi-user
 - [ ] Expose the sign-up flow (auth infrastructure already exists from Phase 0)

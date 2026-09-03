@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StepNoteEditor } from '../components/StepNoteEditor'
 import { loadCookProgress, saveCookProgress } from '../lib/cookProgress'
 import { getRecipe, setStepNote } from '../lib/recipes'
+import { SCALE_FACTORS, scaleFactorLabel, scaleStepText } from '../lib/scale'
 import { formatAmount } from '../lib/units'
 import { useWakeLock } from '../lib/useWakeLock'
 import type { RecipeWithDetail } from '../types'
@@ -98,6 +99,10 @@ export function CookingMode() {
   const [error, setError] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [ingredientsOpen, setIngredientsOpen] = useState(false)
+  const [scale, setScale] = useState(1)
+
+  const amt = (q: number | null, u: string | null) =>
+    formatAmount(q != null ? q * scale : null, u)
 
   useEffect(() => {
     let active = true
@@ -105,6 +110,7 @@ export function CookingMode() {
       .then((r) => {
         if (!active) return
         setRecipe(r)
+        setScale(1)
         if (r) setChecked(new Set(loadCookProgress(id)))
       })
       .catch((e: unknown) => {
@@ -199,6 +205,23 @@ export function CookingMode() {
       </div>
 
       <div className="rb-cook-body">
+        <div className="rb-cook-scale">
+          <span className="rb-muted">Scale</span>
+          <div className="rb-unit-toggle" role="group" aria-label="Scale recipe">
+            {SCALE_FACTORS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                className={`rb-unit-toggle__opt${scale === f ? ' is-on' : ''}`}
+                aria-pressed={scale === f}
+                onClick={() => setScale(f)}
+              >
+                {scaleFactorLabel(f)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <section className="rb-cook-ingredients">
           <h2>Ingredients</h2>
           {recipe.recipe_ingredients.length === 0 ? (
@@ -207,7 +230,7 @@ export function CookingMode() {
             <ul className="rb-cook-ingredient-list">
               {recipe.recipe_ingredients.map((ing) => (
                 <li key={ing.id}>
-                  <span className="rb-ingredient-qty">{formatAmount(ing.quantity, ing.unit)}</span>{' '}
+                  <span className="rb-ingredient-qty">{amt(ing.quantity, ing.unit)}</span>{' '}
                   {ing.name}
                   {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
                 </li>
@@ -235,7 +258,17 @@ export function CookingMode() {
                       <span className="rb-cook-step__check" aria-hidden="true">
                         {isDone ? '✓' : i + 1}
                       </span>
-                      <span className="rb-cook-step__text">{step.instruction}</span>
+                      <span className="rb-cook-step__text">
+                        {scaleStepText(step.instruction, scale).segments.map((seg, si) =>
+                          seg.scaled ? (
+                            <mark key={si} className="rb-scaled">
+                              {seg.text}
+                            </mark>
+                          ) : (
+                            <span key={si}>{seg.text}</span>
+                          ),
+                        )}
+                      </span>
                     </button>
                     <div className="rb-cook-step__notes">
                       <StepNoteEditor
@@ -289,9 +322,7 @@ export function CookingMode() {
               <ul className="rb-cook-ingredient-list">
                 {recipe.recipe_ingredients.map((ing) => (
                   <li key={ing.id}>
-                    <span className="rb-ingredient-qty">
-                      {formatAmount(ing.quantity, ing.unit)}
-                    </span>{' '}
+                    <span className="rb-ingredient-qty">{amt(ing.quantity, ing.unit)}</span>{' '}
                     {ing.name}
                     {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
                   </li>
