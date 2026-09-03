@@ -248,12 +248,14 @@ textarea.rb-field {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* Each card sizes to its own content — a card with no photo / description /
+     meta is simply shorter, no forced-equal-height voids. */
+  align-items: start;
 }
 
 .rb-recipe-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: var(--paper-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -268,13 +270,24 @@ textarea.rb-field {
 }
 
 .rb-recipe-card__media {
+  position: relative;
+  flex: none; /* fixed 3:2 band; never grows or shrinks in the card column */
+  width: 100%;
   aspect-ratio: 3 / 2;
   background: var(--paper);
-  display: grid;
-  place-items: center;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Absolutely positioned so the photo's intrinsic size can't feed back into the
+   card's height — aspect-ratio alone controls the band, whatever the image is
+   (or isn't). */
 .rb-recipe-card__media img {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -285,6 +298,7 @@ textarea.rb-field {
 }
 
 .rb-recipe-card__body {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -294,6 +308,7 @@ textarea.rb-field {
 .rb-recipe-card__body h2 {
   font-size: 1.1rem;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .rb-recipe-card__meta {

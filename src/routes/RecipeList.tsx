@@ -8,6 +8,13 @@ function totalMinutes(r: Recipe): number | null {
   return sum > 0 ? sum : null
 }
 
+function cardMeta(r: Recipe): string {
+  const mins = totalMinutes(r)
+  return [r.servings ? `${r.servings} servings` : null, mins ? `${mins} min` : null]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 export function RecipeList() {
   const [search, setSearch] = useState('')
   const [recipes, setRecipes] = useState<Recipe[] | null>(null)
@@ -67,33 +74,29 @@ export function RecipeList() {
         </div>
       ) : (
         <ul className="rb-grid">
-          {recipes.map((r) => (
-            <li key={r.id}>
-              <Link to={`/recipes/${r.id}`} className="rb-recipe-card">
-                <div className="rb-recipe-card__media">
-                  {r.image_url ? (
-                    <img src={r.image_url} alt="" loading="lazy" />
-                  ) : (
-                    <span className="rb-recipe-card__placeholder" aria-hidden="true">
-                      🍲
-                    </span>
-                  )}
-                </div>
-                <div className="rb-recipe-card__body">
-                  <h2>{r.title}</h2>
-                  {r.description && <p className="rb-clamp-2 rb-muted">{r.description}</p>}
-                  <p className="rb-recipe-card__meta rb-muted">
-                    {[
-                      r.servings ? `${r.servings} servings` : null,
-                      totalMinutes(r) ? `${totalMinutes(r)} min` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
+          {recipes.map((r) => {
+            const meta = cardMeta(r)
+            return (
+              <li key={r.id}>
+                <Link to={`/recipes/${r.id}`} className="rb-recipe-card">
+                  <div className="rb-recipe-card__media">
+                    {r.image_url ? (
+                      <img src={r.image_url} alt="" loading="lazy" />
+                    ) : (
+                      <span className="rb-recipe-card__placeholder" aria-hidden="true">
+                        🍲
+                      </span>
+                    )}
+                  </div>
+                  <div className="rb-recipe-card__body">
+                    <h2>{r.title}</h2>
+                    {r.description && <p className="rb-clamp-2 rb-muted">{r.description}</p>}
+                    {meta && <p className="rb-recipe-card__meta rb-muted">{meta}</p>}
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
