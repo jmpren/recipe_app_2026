@@ -2,10 +2,102 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { clearCookProgress } from '../lib/cookProgress'
 import { logCook } from '../lib/cooks'
-import { getRecipe } from '../lib/recipes'
-import type { RecipeWithDetail } from '../types'
+import { createRiff, getRecipe } from '../lib/recipes'
+import type { CookLog, RecipeWithDetail } from '../types'
 
 const STARS = [1, 2, 3, 4, 5]
+
+/**
+ * Post-cook riff prompt (PLAN.md §7). Only reachable right after a cook is
+ * logged, and it always carries that cook's id — this is the single entry point
+ * for a riff, so a riff is never speculative and never an edit.
+ */
+function RiffPrompt({ cookLogId, onDone }: { cookLogId: string; onDone: () => void }) {
+  const [mode, setMode] = useState<'ask' | 'form'>('ask')
+  const [label, setLabel] = useState('')
+  const [whatChanged, setWhatChanged] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function saveRiff(e: FormEvent) {
+    e.preventDefault()
+    if (!label.trim()) {
+      setError('A short summary is required.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      await createRiff(cookLogId, label, whatChanged)
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save the riff.')
+      setSaving(false)
+    }
+  }
+
+  if (mode === 'ask') {
+    return (
+      <div className="rb-stack">
+        <header className="rb-stack rb-stack--tight">
+          <h1>Cook logged</h1>
+          <p className="rb-muted">Did you change anything this time?</p>
+        </header>
+        <div className="rb-form-actions">
+          <button type="button" className="rb-button" onClick={() => setMode('form')}>
+            Yes, I riffed
+          </button>
+          <button type="button" className="rb-button rb-button--ghost" onClick={onDone}>
+            No — made it as written
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <form className="rb-stack" onSubmit={saveRiff}>
+      <header className="rb-stack rb-stack--tight">
+        <h1>Save a riff</h1>
+        <p className="rb-muted">
+          A retrospective note on what you did differently. It doesn’t change the recipe.
+        </p>
+      </header>
+
+      <label className="rb-label">
+        What changed (short)
+        <input
+          className="rb-field"
+          value={label}
+          placeholder="e.g. Used chicken thighs instead of breast"
+          onChange={(e) => setLabel(e.target.value)}
+          required
+        />
+      </label>
+
+      <label className="rb-label">
+        More detail (optional)
+        <textarea
+          className="rb-field"
+          rows={4}
+          value={whatChanged}
+          onChange={(e) => setWhatChanged(e.target.value)}
+        />
+      </label>
+
+      {error && <p className="rb-error">{error}</p>}
+
+      <div className="rb-form-actions">
+        <button className="rb-button" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save riff'}
+        </button>
+        <button type="button" className="rb-button rb-button--ghost" onClick={onDone}>
+          Skip
+        </button>
+      </div>
+    </form>
+  )
+}
 
 export function RecipeCookLog() {
   const { id = '' } = useParams()
@@ -17,6 +109,7 @@ export function RecipeCookLog() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cookLog, setCookLog] = useState<CookLog | null>(null)
 
   useEffect(() => {
     let active = true
@@ -34,20 +127,21 @@ export function RecipeCookLog() {
     }
   }, [id])
 
+  const backToRecipe = () => navigate(`/recipes/${id}`, { replace: true })
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSaving(true)
     setError(null)
     try {
       const parsed = servingsMade.trim() ? Number.parseInt(servingsMade, 10) : null
-      await logCook(id, {
+      const log = await logCook(id, {
         servingsMade: parsed != null && Number.isFinite(parsed) && parsed > 0 ? parsed : null,
         rating,
         notes,
       })
       clearCookProgress(id)
-      // The post-cook riff prompt slots in here in the next Phase 1 task.
-      navigate(`/recipes/${id}`, { replace: true })
+      setCookLog(log) // hand off to the riff prompt
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log the cook.')
       setSaving(false)
@@ -66,6 +160,8 @@ export function RecipeCookLog() {
       </div>
     )
   }
+
+  if (cookLog) return <RiffPrompt cookLogId={cookLog.id} onDone={backToRecipe} />
 
   return (
     <form className="rb-stack" onSubmit={handleSubmit}>

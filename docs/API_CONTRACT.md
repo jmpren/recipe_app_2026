@@ -67,10 +67,16 @@ see (not owned / doesn't exist).
 **Output:** the created `cook_logs` row
 
 ### `create_riff`
-**Status:** planned (Phase 1)
+**Status:** implemented (Phase 1)
 **Purpose:** Creates a riff linked to a specific cook log. Enforces that riffs are
-always retrospective — rejects if no matching `cook_log_id` is provided.
-**Input:** `cook_log_id uuid, label text, what_changed text`
+always retrospective — rejects if no matching `cook_log_id` is provided. Never
+touches the recipe or `recipe_versions` (a riff is not an edit).
+**Input:** `cook_log_id uuid` (required — the cook this riff came from),
+`label text` (required — short summary), `what_changed text` (optional free text;
+blank stored as null). `security invoker`; `recipe_id` is derived from the cook
+log (looked up under the caller's RLS, so it can't be pinned to someone else's
+cook), `created_by` forced to `auth.uid()`. Raises on no auth, missing
+`cook_log_id`, blank `label`, or a `cook_log_id` the caller can't see.
 **Output:** the created `recipe_riffs` row
 
 ### `promote_riff_to_version`

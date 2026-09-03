@@ -57,6 +57,25 @@ export async function listRiffs(recipeId: string): Promise<RecipeRiff[]> {
   return data ?? []
 }
 
+/**
+ * Record a riff via the create_riff RPC. Always retrospective — it needs the
+ * cook_log_id of a cook that just happened (PLAN.md §7). There is no other entry
+ * point; a riff is never a blank/speculative entry and never an edit.
+ */
+export async function createRiff(
+  cookLogId: string,
+  label: string,
+  whatChanged: string,
+): Promise<RecipeRiff> {
+  const { data, error } = await supabase.rpc('create_riff', {
+    cook_log_id: cookLogId,
+    label: label.trim(),
+    what_changed: whatChanged.trim() || undefined,
+  })
+  if (error) throw error
+  return data as RecipeRiff
+}
+
 async function uploadRecipePhoto(recipeId: string, file: File): Promise<string> {
   const { data: auth } = await supabase.auth.getUser()
   const userId = auth.user?.id

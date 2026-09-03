@@ -385,6 +385,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_riff: {
+        Args: { cook_log_id: string; label: string; what_changed?: string }
+        Returns: {
+          cook_log_id: string
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          recipe_id: string
+          what_changed: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "recipe_riffs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       log_cook: {
         Args: {
           notes?: string

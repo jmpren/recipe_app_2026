@@ -367,6 +367,61 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- RPC: create_riff(cook_log_id uuid, label text, what_changed text)
+--       -> recipe_riffs
+-- Retrospective variation, always tied to a real cook (PLAN.md §7). The
+-- required cook_log_id enforces "never speculative". security invoker;
+-- recipe_id is derived from the cook log (looked up under the caller's RLS),
+-- created_by forced to auth.uid(). Never touches the recipe or recipe_versions.
+-- See docs/API_CONTRACT.md and the …_create_riff_rpc.sql migration.
+-- ---------------------------------------------------------------------------
+create or replace function public.create_riff(
+  cook_log_id uuid,
+  label text,
+  what_changed text default null
+)
+returns public.recipe_riffs
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_recipe_id uuid;
+  v_riff public.recipe_riffs;
+  v_label text := nullif(btrim(label), '');
+begin
+  if v_user is null then
+    raise exception 'create_riff: not authenticated' using errcode = '28000';
+  end if;
+  if create_riff.cook_log_id is null then
+    raise exception 'create_riff: cook_log_id is required — riffs are always retrospective'
+      using errcode = '23514';
+  end if;
+  if v_label is null then
+    raise exception 'create_riff: label is required' using errcode = '23514';
+  end if;
+
+  select cl.recipe_id into v_recipe_id
+  from public.cook_logs cl
+  where cl.id = create_riff.cook_log_id;
+
+  if v_recipe_id is null then
+    raise exception 'create_riff: cook log not found' using errcode = 'P0002';
+  end if;
+
+  insert into public.recipe_riffs (recipe_id, cook_log_id, created_by, label, what_changed)
+  values (
+    v_recipe_id, create_riff.cook_log_id, v_user, v_label,
+    nullif(btrim(what_changed), '')
+  )
+  returning * into v_riff;
+
+  return v_riff;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Storage: recipe-photos bucket
 -- Public read; authenticated users may write only under their own <uid>/ prefix.
 -- Path convention: recipe-photos/<user-uid>/<recipe-id>/<file>
