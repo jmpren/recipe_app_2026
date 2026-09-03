@@ -223,7 +223,9 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 - [x] Inline step notes (the `recipe_steps.note` field, NYT-style) — add/edit
       per step on the recipe detail page and in cooking mode; a plain column
       write, never a version (PLAN §5)
-- [ ] Toggle: view original vs. current-edit version of a recipe
+- [x] Toggle: view original vs. current-edit version of a recipe — Current /
+      Original switch on the detail page (shown once the recipe has any edit),
+      reads the `is_original` `recipe_versions` snapshot
 - [ ] Serving-size learning: after a few logged cooks, suggest a corrected
       `servings` default based on `cook_logs.servings_made`
 - [ ] Favorites bias + "don't repeat within X weeks" (reads `cook_logs` history)

@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StepNoteEditor } from '../components/StepNoteEditor'
-import { deleteRecipe, getRecipe, listRiffs, setStepNote } from '../lib/recipes'
+import { deleteRecipe, getRecipe, listRiffs, listVersions, setStepNote } from '../lib/recipes'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
-import type { RecipeIngredient, RecipeRiff, RecipeWithDetail } from '../types'
+import type { RecipeIngredient, RecipeRiff, RecipeVersionSummary, RecipeWithDetail } from '../types'
 
 const UNIT_SYSTEMS: UnitSystem[] = ['original', 'metric', 'imperial']
+
+const byPosition = <T extends { position: number }>(a: T, b: T) => a.position - b.position
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
 export function RecipeDetail() {
   const { id = '' } = useParams()
@@ -19,6 +25,9 @@ export function RecipeDetail() {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original')
   const [converted, setConverted] = useState<Partial<Record<'metric' | 'imperial', ConvertedAmount[]>>>({})
   const [convertError, setConvertError] = useState<string | null>(null)
+
+  const [versions, setVersions] = useState<RecipeVersionSummary[]>([])
+  const [versionView, setVersionView] = useState<'current' | 'original'>('current')
 
   async function handleDelete() {
     if (!window.confirm('Delete this recipe? This can’t be undone.')) return
@@ -34,15 +43,17 @@ export function RecipeDetail() {
 
   useEffect(() => {
     let active = true
-    Promise.all([getRecipe(id), listRiffs(id)])
-      .then(([r, rf]) => {
+    Promise.all([getRecipe(id), listRiffs(id), listVersions(id)])
+      .then(([r, rf, vs]) => {
         if (!active) return
         setRecipe(r)
         setRiffs(rf)
+        setVersions(vs)
         // New recipe -> drop any conversions cached for the previous one.
         setUnitSystem('original')
         setConverted({})
         setConvertError(null)
+        setVersionView('current')
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : 'Failed to load recipe')
@@ -93,6 +104,17 @@ export function RecipeDetail() {
     recipe.prep_minutes ? `${recipe.prep_minutes} min prep` : null,
     recipe.cook_minutes ? `${recipe.cook_minutes} min cook` : null,
   ].filter(Boolean)
+
+  const originalVersion = versions.find((v) => v.is_original) ?? null
+  const hasEdits = versions.some((v) => !v.is_original)
+  const showingOriginal = versionView === 'original' && originalVersion != null
+
+  const snapshotIngredients = originalVersion?.snapshot?.ingredients
+    ? [...originalVersion.snapshot.ingredients].sort(byPosition)
+    : []
+  const snapshotSteps = originalVersion?.snapshot?.steps
+    ? [...originalVersion.snapshot.steps].sort(byPosition)
+    : []
 
   function ingredientAmount(index: number, ing: RecipeIngredient): string {
     if (unitSystem !== 'original') {
@@ -155,12 +177,38 @@ export function RecipeDetail() {
         </button>
       </div>
 
+      {hasEdits && originalVersion && (
+        <div className="rb-section-head">
+          <span className="rb-muted">Version</span>
+          <div className="rb-unit-toggle" role="group" aria-label="Recipe version">
+            {(['current', 'original'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`rb-unit-toggle__opt${versionView === v ? ' is-on' : ''}`}
+                aria-pressed={versionView === v}
+                onClick={() => setVersionView(v)}
+              >
+                {v === 'current' ? 'Current' : 'Original'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showingOriginal && originalVersion && (
+        <p className="rb-muted">
+          Showing the original version, saved {formatDate(originalVersion.created_at)}. Later edits
+          aren’t shown here.
+        </p>
+      )}
+
       {recipe.description && <p>{recipe.description}</p>}
 
       <section>
         <div className="rb-section-head">
           <h2>Ingredients</h2>
-          {recipe.recipe_ingredients.length > 0 && (
+          {!showingOriginal && recipe.recipe_ingredients.length > 0 && (
             <div className="rb-unit-toggle" role="group" aria-label="Measurement units">
               {UNIT_SYSTEMS.map((sys) => (
                 <button
@@ -179,8 +227,22 @@ export function RecipeDetail() {
             </div>
           )}
         </div>
-        {convertError && <p className="rb-muted">{convertError}</p>}
-        {recipe.recipe_ingredients.length === 0 ? (
+        {!showingOriginal && convertError && <p className="rb-muted">{convertError}</p>}
+        {showingOriginal ? (
+          snapshotIngredients.length === 0 ? (
+            <p className="rb-muted">No ingredients listed.</p>
+          ) : (
+            <ul className="rb-ingredient-list">
+              {snapshotIngredients.map((ing, i) => (
+                <li key={i}>
+                  <span className="rb-ingredient-qty">{formatAmount(ing.quantity, ing.unit)}</span>{' '}
+                  {ing.name}
+                  {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
+                </li>
+              ))}
+            </ul>
+          )
+        ) : recipe.recipe_ingredients.length === 0 ? (
           <p className="rb-muted">No ingredients listed.</p>
         ) : (
           <ul className="rb-ingredient-list">
@@ -197,7 +259,20 @@ export function RecipeDetail() {
 
       <section>
         <h2>Steps</h2>
-        {recipe.recipe_steps.length === 0 ? (
+        {showingOriginal ? (
+          snapshotSteps.length === 0 ? (
+            <p className="rb-muted">No steps listed.</p>
+          ) : (
+            <ol className="rb-step-list">
+              {snapshotSteps.map((step, i) => (
+                <li key={i}>
+                  <p>{step.instruction}</p>
+                  {step.note && <p className="rb-step-note">{step.note}</p>}
+                </li>
+              ))}
+            </ol>
+          )
+        ) : recipe.recipe_steps.length === 0 ? (
           <p className="rb-muted">No steps listed.</p>
         ) : (
           <ol className="rb-step-list">

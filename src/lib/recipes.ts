@@ -1,6 +1,13 @@
 import { RECIPE_PHOTOS_BUCKET, supabase } from './supabase'
 import { emptyIngredient, emptyStep } from './draft'
-import type { Recipe, RecipeDraft, RecipeRiff, RecipeWithDetail } from '../types'
+import type {
+  Recipe,
+  RecipeDraft,
+  RecipeRiff,
+  RecipeVersionSummary,
+  RecipeWithDetail,
+  VersionSnapshot,
+} from '../types'
 
 const strOrEmpty = (v: number | null) => (v == null ? '' : String(v))
 
@@ -44,6 +51,22 @@ export async function getRecipe(id: string): Promise<RecipeWithDetail | null> {
     recipe_ingredients: [...data.recipe_ingredients].sort(byPosition),
     recipe_steps: [...data.recipe_steps].sort(byPosition),
   }
+}
+
+/**
+ * The recipe's version history, oldest first. Row 1 is always the mandatory
+ * `is_original` snapshot; a row per Edit-screen save after that (PLAN.md §5/§7).
+ * Plain read — RLS scopes it to the owner.
+ */
+export async function listVersions(recipeId: string): Promise<RecipeVersionSummary[]> {
+  const { data, error } = await supabase
+    .from('recipe_versions')
+    .select('id, label, is_original, created_at, snapshot')
+    .eq('recipe_id', recipeId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []).map((v) => ({ ...v, snapshot: v.snapshot as unknown as VersionSnapshot }))
 }
 
 export async function listRiffs(recipeId: string): Promise<RecipeRiff[]> {

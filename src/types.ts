@@ -13,6 +13,26 @@ export interface RecipeWithDetail extends Recipe {
   recipe_steps: RecipeStep[]
 }
 
+/** Shape of `recipe_versions.snapshot` — written by create_recipe / update_recipe. */
+export interface VersionSnapshot {
+  ingredients: {
+    position: number
+    quantity: number | null
+    unit: string | null
+    name: string
+    notes: string | null
+  }[]
+  steps: { position: number; instruction: string; note: string | null }[]
+}
+
+export interface RecipeVersionSummary {
+  id: string
+  label: string
+  is_original: boolean
+  created_at: string
+  snapshot: VersionSnapshot
+}
+
 /** One editable ingredient line in the recipe form (pre-persist). */
 export interface IngredientDraft {
   quantity: string
