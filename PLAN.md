@@ -226,8 +226,10 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 - [x] Toggle: view original vs. current-edit version of a recipe — Current /
       Original switch on the detail page (shown once the recipe has any edit),
       reads the `is_original` `recipe_versions` snapshot
-- [ ] Serving-size learning: after a few logged cooks, suggest a corrected
-      `servings` default based on `cook_logs.servings_made`
+- [x] Serving-size learning: after a few logged cooks, suggest a corrected
+      `servings` default based on `cook_logs.servings_made` (`predicted_servings`
+      RPC — rounded mean, ≥3 cooks; advisory nudge on the detail page linking to
+      the editor)
 - [ ] Favorites bias + "don't repeat within X weeks" (reads `cook_logs` history)
 - [ ] Meal-day assignment + basic calendar view
 - [ ] Shopping list generated from a set of selected recipes

@@ -527,6 +527,41 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- RPC: predicted_servings(recipe_id uuid) -> jsonb | null
+-- Serving-size learning (Phase 2): once >= 3 cooks have a servings_made value,
+-- return { suggested_servings, based_on_cooks } (rounded mean); else null.
+-- stable, security invoker; reads cook_logs (RLS-scoped to the caller). Purely
+-- a suggestion — does not modify the recipe. See docs/API_CONTRACT.md and the
+-- …_predicted_servings_rpc.sql migration.
+-- ---------------------------------------------------------------------------
+create or replace function public.predicted_servings(recipe_id uuid)
+returns jsonb
+language plpgsql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  min_cooks constant int := 3;
+  n int;
+  avg_made numeric;
+begin
+  select count(*), avg(cl.servings_made)
+    into n, avg_made
+  from public.cook_logs cl
+  where cl.recipe_id = predicted_servings.recipe_id
+    and cl.servings_made is not null
+    and cl.servings_made > 0;
+
+  if n < min_cooks then
+    return null;
+  end if;
+
+  return jsonb_build_object('suggested_servings', round(avg_made)::int, 'based_on_cooks', n);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Storage: recipe-photos bucket
 -- Public read; authenticated users may write only under their own <uid>/ prefix.
 -- Path convention: recipe-photos/<user-uid>/<recipe-id>/<file>

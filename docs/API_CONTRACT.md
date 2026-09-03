@@ -112,12 +112,16 @@ and the repeat-within-X-weeks exclusion rule, reading from `cook_logs` history.
 **Output:** array of `recipes` rows
 
 ### `predicted_servings`
-**Status:** planned (Phase 2)
+**Status:** implemented (Phase 2)
 **Purpose:** After a recipe has enough logged cooks, returns a suggested servings
 count based on `cook_logs.servings_made` history, for the "we think this actually
-makes N servings" nudge.
+makes N servings" nudge. `stable`, `security invoker`; reads `cook_logs` (already
+RLS-scoped to the caller). Purely advisory — does not modify the recipe.
 **Input:** `recipe_id uuid`
-**Output:** `{ suggested_servings: int, based_on_cooks: int }` or null if not enough data yet
+**Method:** rounded mean of `servings_made` over the recipe's cook logs where
+`servings_made` is present and `> 0`. Threshold: **3** such cooks.
+**Output:** `{ suggested_servings: int, based_on_cooks: int }`, or `null` when
+fewer than 3 usable cooks exist yet.
 
 ---
 

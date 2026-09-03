@@ -434,6 +434,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      predicted_servings: { Args: { recipe_id: string }; Returns: Json }
       update_recipe: {
         Args: { payload: Json }
         Returns: {

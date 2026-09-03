@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StepNoteEditor } from '../components/StepNoteEditor'
+import { predictedServings, type ServingsSuggestion } from '../lib/cooks'
 import { deleteRecipe, getRecipe, listRiffs, listVersions, setStepNote } from '../lib/recipes'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
 import type { RecipeIngredient, RecipeRiff, RecipeVersionSummary, RecipeWithDetail } from '../types'
@@ -28,6 +29,7 @@ export function RecipeDetail() {
 
   const [versions, setVersions] = useState<RecipeVersionSummary[]>([])
   const [versionView, setVersionView] = useState<'current' | 'original'>('current')
+  const [servingsHint, setServingsHint] = useState<ServingsSuggestion | null>(null)
 
   async function handleDelete() {
     if (!window.confirm('Delete this recipe? This can’t be undone.')) return
@@ -43,12 +45,18 @@ export function RecipeDetail() {
 
   useEffect(() => {
     let active = true
-    Promise.all([getRecipe(id), listRiffs(id), listVersions(id)])
-      .then(([r, rf, vs]) => {
+    Promise.all([
+      getRecipe(id),
+      listRiffs(id),
+      listVersions(id),
+      predictedServings(id).catch(() => null), // advisory; never blocks the page
+    ])
+      .then(([r, rf, vs, hint]) => {
         if (!active) return
         setRecipe(r)
         setRiffs(rf)
         setVersions(vs)
+        setServingsHint(hint)
         // New recipe -> drop any conversions cached for the previous one.
         setUnitSystem('original')
         setConverted({})
@@ -116,6 +124,10 @@ export function RecipeDetail() {
     ? [...originalVersion.snapshot.steps].sort(byPosition)
     : []
 
+  const showServingsHint =
+    servingsHint != null &&
+    (recipe.servings == null || servingsHint.suggestedServings !== recipe.servings)
+
   function ingredientAmount(index: number, ing: RecipeIngredient): string {
     if (unitSystem !== 'original') {
       const c = converted[unitSystem]?.[index]
@@ -153,6 +165,14 @@ export function RecipeDetail() {
             <a href={recipe.source_url} target="_blank" rel="noreferrer">
               {recipe.source_name || recipe.source_url}
             </a>
+          </p>
+        )}
+        {showServingsHint && servingsHint && (
+          <p className="rb-nudge">
+            Your {servingsHint.basedOnCooks} logged cooks average about{' '}
+            {servingsHint.suggestedServings} servings
+            {recipe.servings != null ? `, not the ${recipe.servings} set here` : ''}.{' '}
+            <Link to={`/recipes/${recipe.id}/edit`}>Adjust the default</Link>
           </p>
         )}
       </header>

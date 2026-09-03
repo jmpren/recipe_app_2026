@@ -23,3 +23,21 @@ export async function logCook(recipeId: string, input: CookLogInput): Promise<Co
   if (error) throw error
   return data as CookLog
 }
+
+export interface ServingsSuggestion {
+  suggestedServings: number
+  basedOnCooks: number
+}
+
+/**
+ * Serving-size learning: what the recipe seems to actually yield, from logged
+ * cooks. null until there's enough history (see the `predicted_servings` RPC).
+ * Advisory only — the caller decides whether to surface a nudge.
+ */
+export async function predictedServings(recipeId: string): Promise<ServingsSuggestion | null> {
+  const { data, error } = await supabase.rpc('predicted_servings', { recipe_id: recipeId })
+  if (error) throw error
+  if (!data) return null
+  const d = data as { suggested_servings: number; based_on_cooks: number }
+  return { suggestedServings: d.suggested_servings, basedOnCooks: d.based_on_cooks }
+}

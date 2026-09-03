@@ -538,6 +538,16 @@ textarea.rb-field {
   gap: 8px;
 }
 
+.rb-nudge {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: var(--paper-raised);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  color: var(--ink-soft);
+}
+
 /* In cooking mode the step card has no padding of its own — inset the note UI
    so it lines up with the step text. */
 .rb-cook-step__notes {
