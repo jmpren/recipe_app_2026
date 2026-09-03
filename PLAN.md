@@ -192,24 +192,27 @@ Key rules locked in during planning:
 - Auth: Supabase magic-link email sign-in wired up (even though MVP is single-user —
   this is intentional groundwork, not premature complexity)
 
-### Phase 1 — MVP (single user: you)
+### Phase 1 — MVP (single user: you) — COMPLETE
 Definition of done: you can fully replace however you currently save recipes today.
 
-- [ ] Sign in via magic link
-- [ ] Recipe list (grid), search by title
-- [ ] Add recipe from scratch: title, description, source URL, servings,
+- [x] Sign in via magic link
+- [x] Recipe list (grid), search by title
+- [x] Add recipe from scratch: title, description, source URL, servings,
       prep/cook time, photo, structured ingredients, steps
-- [ ] Add recipe via URL paste: attempt schema.org extraction, pre-fill form,
+- [x] Add recipe via URL paste: attempt schema.org extraction, pre-fill form,
       fully editable before save, graceful fallback to blank form
-- [ ] Recipe detail page (view mode)
-- [ ] Cooking mode: full-page view, large type, tap-to-check steps, screen wake lock
-- [ ] Log a cook: rating, notes, servings made — always logged to `cook_logs`
+      (`import-recipe-from-url` Edge Function)
+- [x] Recipe detail page (view mode)
+- [x] Cooking mode: full-page view, large type, tap-to-check steps, screen wake lock
+      (+ optional per-step timer, progress persisted per recipe)
+- [x] Log a cook: rating, notes, servings made — always logged to `cook_logs`
       (this silently seeds every future Phase 2 feature — do not skip)
-- [ ] Post-cook riff prompt: "Did you change anything?" → if yes, save to
+- [x] Post-cook riff prompt: "Did you change anything?" → if yes, save to
       `recipe_riffs` linked to that cook log
-- [ ] Recipe detail page: collapsible "Riffs (n)" section, collapsed by default
-- [ ] Edit recipe screen (permanent changes → new `recipe_versions` row)
-- [ ] Delete recipe
+- [x] Recipe detail page: collapsible "Riffs (n)" section, collapsed by default
+- [x] Edit recipe screen (permanent changes → new `recipe_versions` row)
+      (`update_recipe` RPC)
+- [x] Delete recipe
 
 Explicitly OUT of MVP: meal planning, shopping lists, favorites/repeat-limit logic,
 metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
