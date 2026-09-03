@@ -36,6 +36,24 @@ and step rows with a blank `instruction` are dropped; `position` defaults to arr
 order. Raises on missing `title` or no auth.
 **Output:** the created `recipes` row.
 
+### `update_recipe`
+**Status:** implemented (Phase 1)
+**Purpose:** Edits an existing recipe in one transaction — updates the `recipes`
+row, fully replaces its `recipe_ingredients` and `recipe_steps`, and appends a
+new **non-original** snapshot to `recipe_versions`. Exists as a function because
+every edit through the Edit screen is permanent and must record a version row
+(PLAN.md §7) — a client cannot make a silent edit. Edits are never riffs.
+`security invoker`, so RLS applies; `owner_id` is never modified.
+**Input:** `payload jsonb` — same shape as `create_recipe`, plus a **required**
+`id` (the recipe to edit) and an optional `version_label` (defaults to
+`Edited <UTC timestamp>`). Ingredient rows with a blank `name` and step rows with
+a blank `instruction` are dropped; `position` defaults to array order. Raises on
+missing `id`, missing `title`, no auth, or a recipe the caller does not own /
+that does not exist.
+**Output:** the updated `recipes` row.
+**Note:** `recipe_steps.note` (Phase 2 inline annotations) is replaced along with
+the other step fields; preserving notes across an edit is a Phase 2 concern.
+
 ### `log_cook`
 **Status:** planned (Phase 1)
 **Purpose:** Records a cook and returns the new cook_log row. Exists as a function

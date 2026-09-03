@@ -130,6 +130,16 @@ a {
   background: var(--paper);
 }
 
+.rb-button--danger {
+  color: var(--danger);
+}
+
+.rb-button--danger:hover {
+  color: var(--paper-raised);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
 .rb-muted {
   color: var(--ink-soft);
 }

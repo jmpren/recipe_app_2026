@@ -1,5 +1,8 @@
 import { RECIPE_PHOTOS_BUCKET, supabase } from './supabase'
+import { emptyIngredient, emptyStep } from './draft'
 import type { Recipe, RecipeDraft, RecipeRiff, RecipeWithDetail } from '../types'
+
+const strOrEmpty = (v: number | null) => (v == null ? '' : String(v))
 
 function intOrNull(v: string): number | null {
   const n = Number.parseInt(v, 10)
@@ -104,4 +107,59 @@ export async function createRecipe(draft: RecipeDraft, photo: File | null): Prom
   })
   if (error) throw error
   return data as Recipe
+}
+
+/** Hydrate the shared form from a persisted recipe (Edit screen). */
+export function recipeToDraft(recipe: RecipeWithDetail): RecipeDraft {
+  return {
+    title: recipe.title,
+    description: recipe.description ?? '',
+    source_url: recipe.source_url ?? '',
+    source_name: recipe.source_name ?? '',
+    servings: strOrEmpty(recipe.servings),
+    prep_minutes: strOrEmpty(recipe.prep_minutes),
+    cook_minutes: strOrEmpty(recipe.cook_minutes),
+    ingredients: recipe.recipe_ingredients.length
+      ? recipe.recipe_ingredients.map((i) => ({
+          quantity: strOrEmpty(i.quantity),
+          unit: i.unit ?? '',
+          name: i.name,
+          notes: i.notes ?? '',
+        }))
+      : [emptyIngredient()],
+    steps: recipe.recipe_steps.length
+      ? recipe.recipe_steps.map((s) => ({ instruction: s.instruction }))
+      : [emptyStep()],
+  }
+}
+
+/**
+ * Save a permanent edit. update_recipe replaces ingredients/steps and records a
+ * new recipe_versions row server-side (Edit == permanent — PLAN.md §7). When no
+ * new photo is picked, the current image_url is passed through unchanged.
+ */
+export async function updateRecipe(
+  id: string,
+  draft: RecipeDraft,
+  photo: File | null,
+  currentImageUrl: string | null,
+): Promise<Recipe> {
+  const image_url = photo ? await uploadRecipePhoto(id, photo) : currentImageUrl
+
+  const { data, error } = await supabase.rpc('update_recipe', {
+    payload: { id, image_url, ...draftToPayload(draft) },
+  })
+  if (error) throw error
+  return data as Recipe
+}
+
+/**
+ * Delete a recipe. Child rows (ingredients, steps, versions, cook logs, riffs)
+ * go with it via ON DELETE CASCADE. Photo objects in the recipe-photos bucket are
+ * left in place for now — Storage has no cascade, and orphan cleanup is not a
+ * Phase 1 concern.
+ */
+export async function deleteRecipe(id: string): Promise<void> {
+  const { error } = await supabase.from('recipes').delete().eq('id', id)
+  if (error) throw error
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getRecipe, listRiffs } from '../lib/recipes'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteRecipe, getRecipe, listRiffs } from '../lib/recipes'
 import type { RecipeRiff, RecipeWithDetail } from '../types'
 
 function formatQuantity(quantity: number | null, unit: string | null): string {
@@ -9,10 +9,24 @@ function formatQuantity(quantity: number | null, unit: string | null): string {
 
 export function RecipeDetail() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const [recipe, setRecipe] = useState<RecipeWithDetail | null | undefined>(undefined)
   const [riffs, setRiffs] = useState<RecipeRiff[]>([])
   const [riffsOpen, setRiffsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!window.confirm('Delete this recipe? This can’t be undone.')) return
+    setDeleting(true)
+    try {
+      await deleteRecipe(id)
+      navigate('/', { replace: true })
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to delete recipe')
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -67,6 +81,20 @@ export function RecipeDetail() {
           </p>
         )}
       </header>
+
+      <div className="rb-form-actions">
+        <Link className="rb-button rb-button--ghost" to={`/recipes/${recipe.id}/edit`}>
+          Edit
+        </Link>
+        <button
+          type="button"
+          className="rb-button rb-button--ghost rb-button--danger"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Deleting…' : 'Delete'}
+        </button>
+      </div>
 
       {recipe.description && <p>{recipe.description}</p>}
 
