@@ -230,7 +230,9 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       `servings` default based on `cook_logs.servings_made` (`predicted_servings`
       RPC — rounded mean, ≥3 cooks; advisory nudge on the detail page linking to
       the editor)
-- [ ] Favorites bias + "don't repeat within X weeks" (reads `cook_logs` history)
+- [x] Favorites bias + "don't repeat within X weeks" (reads `cook_logs` history)
+      — `suggest_meals(exclude_weeks, limit_count)` RPC + a "What to cook" page.
+      "Favorite" is derived from `cook_logs.rating` (no stored flag).
 - [ ] Meal-day assignment + basic calendar view
 - [ ] Shopping list generated from a set of selected recipes
 - [ ] Tags/filtering (introduce once real usage patterns exist)

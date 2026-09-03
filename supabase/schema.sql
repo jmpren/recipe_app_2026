@@ -562,6 +562,44 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- RPC: suggest_meals(exclude_weeks int, limit_count int) -> setof recipes
+-- Meal-planning candidates (Phase 2): drop anything cooked in the last
+-- `exclude_weeks`, then bias toward higher average cook rating (with a small
+-- random rotation term). "Favorite" is derived from cook_logs.rating, not a
+-- stored flag. security invoker -> RLS makes it per-user automatically. See
+-- docs/API_CONTRACT.md and the …_suggest_meals_rpc.sql migration.
+-- ---------------------------------------------------------------------------
+create or replace function public.suggest_meals(
+  exclude_weeks int default 2,
+  limit_count int default 5
+)
+returns setof public.recipes
+language sql
+security invoker
+set search_path = public, pg_temp
+as $$
+  with cook_stats as (
+    select
+      cl.recipe_id,
+      avg(cl.rating) filter (where cl.rating is not null) as avg_rating,
+      max(cl.cooked_at) as last_cooked_at
+    from public.cook_logs cl
+    group by cl.recipe_id
+  )
+  select r.*
+  from public.recipes r
+  left join cook_stats cs on cs.recipe_id = r.id
+  where suggest_meals.exclude_weeks <= 0
+     or cs.last_cooked_at is null
+     or cs.last_cooked_at < now() - make_interval(weeks => suggest_meals.exclude_weeks)
+  order by
+    coalesce(cs.avg_rating, 3) + (random() - 0.5) * 1.2 desc,
+    cs.last_cooked_at asc nulls first,
+    r.created_at desc
+  limit greatest(coalesce(suggest_meals.limit_count, 5), 0);
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Storage: recipe-photos bucket
 -- Public read; authenticated users may write only under their own <uid>/ prefix.
 -- Path convention: recipe-photos/<user-uid>/<recipe-id>/<file>

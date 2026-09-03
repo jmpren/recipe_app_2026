@@ -105,11 +105,19 @@ scalar over `[{ quantity, unit }, …]`, preserving order, so a whole ingredient
 list converts in one call.
 
 ### `suggest_meals`
-**Status:** planned (Phase 2)
+**Status:** implemented (Phase 2)
 **Purpose:** Returns candidate recipes for meal planning, applying favorites-bias
 and the repeat-within-X-weeks exclusion rule, reading from `cook_logs` history.
-**Input:** `exclude_weeks int, limit int`
-**Output:** array of `recipes` rows
+`security invoker` — RLS on `recipes` and `cook_logs` makes it per-user with no
+extra check.
+**Input:** `exclude_weeks int` (default 2; `<= 0` disables the exclusion),
+`limit_count int` (default 5; clamped to `>= 0`). *(Named `limit_count`, not
+`limit`, which is a reserved word.)*
+**Method:** exclude any recipe cooked within the last `exclude_weeks`; order the
+rest by `avg(cook_logs.rating)` (unrated treated as 3) plus a small random term
+so repeated calls rotate rather than repeat; tie-break on least-recently-cooked.
+"Favorite" is derived from rating history — there is no stored favorite flag.
+**Output:** up to `limit_count` `recipes` rows, best-fit first.
 
 ### `predicted_servings`
 **Status:** implemented (Phase 2)

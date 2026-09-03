@@ -548,6 +548,25 @@ textarea.rb-field {
   color: var(--ink-soft);
 }
 
+.rb-suggest-controls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.rb-suggest-controls select {
+  font: inherit;
+  margin-left: 4px;
+  padding: 6px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
 /* In cooking mode the step card has no padding of its own — inset the note UI
    so it lines up with the step text. */
 .rb-cook-step__notes {

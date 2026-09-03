@@ -435,6 +435,29 @@ export type Database = {
         }
       }
       predicted_servings: { Args: { recipe_id: string }; Returns: Json }
+      suggest_meals: {
+        Args: { exclude_weeks?: number; limit_count?: number }
+        Returns: {
+          cook_minutes: number | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          owner_id: string
+          prep_minutes: number | null
+          servings: number | null
+          source_name: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "recipes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       update_recipe: {
         Args: { payload: Json }
         Returns: {

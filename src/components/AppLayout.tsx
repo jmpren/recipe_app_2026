@@ -10,6 +10,9 @@ export function AppLayout() {
           <span>Recipe Book</span>
         </Link>
         <nav className="rb-header-actions">
+          <NavLink to="/suggestions" className="rb-button rb-button--ghost">
+            Suggestions
+          </NavLink>
           <NavLink to="/recipes/new" className="rb-button">
             Add recipe
           </NavLink>

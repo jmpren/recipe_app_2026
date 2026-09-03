@@ -36,6 +36,20 @@ export async function listRecipes(search = ''): Promise<Recipe[]> {
   return data ?? []
 }
 
+/**
+ * Meal-planning candidates from the `suggest_meals` RPC: excludes recipes cooked
+ * in the last `excludeWeeks`, biases toward well-rated ones, rotates on each
+ * call. All the ranking is server-side (PLAN.md §3).
+ */
+export async function suggestMeals(excludeWeeks: number, limitCount = 6): Promise<Recipe[]> {
+  const { data, error } = await supabase.rpc('suggest_meals', {
+    exclude_weeks: excludeWeeks,
+    limit_count: limitCount,
+  })
+  if (error) throw error
+  return (data as Recipe[] | null) ?? []
+}
+
 export async function getRecipe(id: string): Promise<RecipeWithDetail | null> {
   const { data, error } = await supabase
     .from('recipes')

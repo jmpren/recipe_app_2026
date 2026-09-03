@@ -9,6 +9,7 @@ import { RecipeDetail } from './routes/RecipeDetail'
 import { RecipeEdit } from './routes/RecipeEdit'
 import { RecipeList } from './routes/RecipeList'
 import { RecipeNew } from './routes/RecipeNew'
+import { Suggestions } from './routes/Suggestions'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<RecipeList />} />
+          <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/recipes/new" element={<RecipeNew />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeEdit />} />
