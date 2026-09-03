@@ -74,7 +74,12 @@ export function Friends() {
 
   return (
     <div className="rb-stack" style={{ maxWidth: 520 }}>
-      <h1>Friends</h1>
+      <div className="rb-list-head">
+        <h1>Friends</h1>
+        <Link to="/households" className="rb-linklike">
+          Households →
+        </Link>
+      </div>
 
       <form className="rb-stack rb-stack--tight" onSubmit={submit}>
         <label className="rb-label">

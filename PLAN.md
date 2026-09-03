@@ -280,7 +280,13 @@ metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
       you can see (yours or a friend's). (Friends riffing *on your* recipe —
       i.e. cooking a shared recipe and adding a riff — is still deferred; it
       needs friend cook/log re-enabled.)
-- [ ] Collaborative family meal planning (suggest → vote → add to shared plan)
+- [x] Collaborative family meal planning (suggest → vote → add to shared plan) —
+      `households` / `household_members` (owner adds friends) + `meal_proposals`
+      / `proposal_votes`; `meal_plan_entries.household_id`. `/households` page;
+      a `Personal | <household>` switch on the calendar with a proposals panel
+      (propose → upvote → schedule onto a day). RPCs: `create_household`,
+      `add_household_member`, `propose_meal`, `schedule_proposal`; `plan_meal`
+      gained an optional `household_id`.
 - [ ] "Pick 1, suggest 3 more" meal-plan assist
 
 ### Phase 4 — Bigger swings

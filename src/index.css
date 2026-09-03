@@ -660,6 +660,93 @@ textarea.rb-field {
   padding: 6px 12px;
 }
 
+.rb-household-card {
+  align-items: flex-start;
+}
+
+/* --- plan views + proposals --- */
+
+.rb-plan-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: -8px;
+}
+
+.rb-plan-views .rb-unit-toggle__opt {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-raised);
+}
+
+.rb-plan-views .rb-unit-toggle__opt.is-on {
+  border-color: var(--sage-dark);
+}
+
+.rb-plan-views .rb-linklike {
+  margin-left: 6px;
+}
+
+.rb-plan-entry__by {
+  font-size: 12px;
+}
+
+.rb-proposals {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rb-proposal {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.rb-proposal__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rb-proposal__main > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.rb-proposal__vote {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.rb-proposal__vote.is-on {
+  color: var(--paper-raised);
+  background: var(--sage);
+  border-color: var(--sage-dark);
+}
+
+.rb-proposal__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rb-proposal__actions .rb-button {
+  padding: 4px 10px;
+}
+
 .rb-linklike {
   font: inherit;
   color: var(--sage);

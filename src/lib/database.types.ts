@@ -123,9 +123,75 @@ export type Database = {
           },
         ]
       }
+      household_members: {
+        Row: {
+          household_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          household_id: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          household_id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "household_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "households_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_entries: {
         Row: {
           created_at: string
+          household_id: string | null
           id: string
           planned_on: string
           position: number
@@ -135,6 +201,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          household_id?: string | null
           id?: string
           planned_on: string
           position?: number
@@ -144,6 +211,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          household_id?: string | null
           id?: string
           planned_on?: string
           position?: number
@@ -152,6 +220,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_plan_entries_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_plan_entries_recipe_id_fkey"
             columns: ["recipe_id"]
@@ -164,6 +239,58 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_proposals: {
+        Row: {
+          created_at: string
+          household_id: string
+          id: string
+          note: string | null
+          proposed_by: string
+          recipe_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          household_id: string
+          id?: string
+          note?: string | null
+          proposed_by: string
+          recipe_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          household_id?: string
+          id?: string
+          note?: string | null
+          proposed_by?: string
+          recipe_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_proposals_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_proposals_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_proposals_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
             referencedColumns: ["id"]
           },
         ]
@@ -185,6 +312,39 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      proposal_votes: {
+        Row: {
+          created_at: string
+          proposal_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          proposal_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          proposal_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_votes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "meal_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recipe_ingredients: {
         Row: {
@@ -495,6 +655,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      add_household_member: {
+        Args: { household_id: string; member_user_id: string }
+        Returns: {
+          household_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "household_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       add_recipe_tag: {
         Args: { recipe_id: string; tag_name: string }
         Returns: {
@@ -518,6 +693,21 @@ export type Database = {
       convert_measurements: {
         Args: { items: Json; target: string }
         Returns: Json
+      }
+      create_household: {
+        Args: { name: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "households"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_recipe: {
         Args: { payload: Json }
@@ -560,6 +750,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_household_member: {
+        Args: { hh: string; uid: string }
+        Returns: boolean
+      }
+      is_household_owner: {
+        Args: { hh: string; uid: string }
+        Returns: boolean
+      }
       log_cook: {
         Args: {
           notes?: string
@@ -583,10 +781,79 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      plan_meal: {
-        Args: { planned_on: string; recipe_id: string; slot?: string }
+      plan_meal:
+        | {
+            Args: { planned_on: string; recipe_id: string; slot?: string }
+            Returns: {
+              created_at: string
+              household_id: string | null
+              id: string
+              planned_on: string
+              position: number
+              recipe_id: string
+              slot: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "meal_plan_entries"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              household_id?: string
+              planned_on: string
+              recipe_id: string
+              slot?: string
+            }
+            Returns: {
+              created_at: string
+              household_id: string | null
+              id: string
+              planned_on: string
+              position: number
+              recipe_id: string
+              slot: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "meal_plan_entries"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      predicted_servings: { Args: { recipe_id: string }; Returns: Json }
+      propose_meal: {
+        Args: {
+          household_id: string
+          note?: string
+          recipe_id: string
+          week_start: string
+        }
         Returns: {
           created_at: string
+          household_id: string
+          id: string
+          note: string | null
+          proposed_by: string
+          recipe_id: string
+          week_start: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "meal_proposals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      schedule_proposal: {
+        Args: { planned_on: string; proposal_id: string; slot?: string }
+        Returns: {
+          created_at: string
+          household_id: string | null
           id: string
           planned_on: string
           position: number
@@ -601,7 +868,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      predicted_servings: { Args: { recipe_id: string }; Returns: Json }
       send_friend_request: {
         Args: { addressee_email: string }
         Returns: {

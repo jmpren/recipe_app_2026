@@ -103,6 +103,29 @@ friends' riffs) that version history never will.
 | what_changed | jsonb or text | Structured diff or free text — MVP starts free text (see open questions in PLAN.md) |
 | created_at | timestamptz | |
 
+## households / household_members / meal_proposals / proposal_votes
+Collaborative meal planning (Phase 3).
+
+- **households** `(id, name, created_by, created_at)`. RLS: members read; owner
+  renames/deletes. Created via `create_household(name)` (also adds the creator
+  as the `owner` member).
+- **household_members** `(household_id, user_id, role owner|member, joined_at)`,
+  PK `(household_id, user_id)`. RLS: co-members read; you can delete your own row
+  (leave) or the owner can remove anyone. Added via `add_household_member(hh,
+  member_user_id)` — owner-only, target must be a friend of the caller.
+  `is_household_member` / `is_household_owner` are security-definer helpers used
+  in the policies (avoid recursive RLS on this table).
+- **meal_proposals** `(id, household_id, recipe_id, proposed_by, week_start,
+  note, created_at)`, unique `(household_id, recipe_id, week_start)`. A member
+  proposes a recipe for a week. RLS: household members read/add(as self)/remove.
+  Added via `propose_meal(...)`.
+- **proposal_votes** `(proposal_id, user_id, created_at)`, PK both. Upvote only.
+  RLS: household members read; add your own; delete your own.
+- **meal_plan_entries** gains `household_id` (nullable). `null` = a personal
+  entry; set = that household's shared plan (any member reads/adds/removes).
+  `plan_meal` takes an optional `household_id`; `schedule_proposal(proposal_id,
+  planned_on, slot)` turns a proposal into a household entry and deletes it.
+
 ## riff_likes
 A like on a riff (Phase 3), one row per (riff, user). PK `(riff_id, user_id)`.
 RLS: readable / insertable by anyone who can see the riff (`can_see_riff` —

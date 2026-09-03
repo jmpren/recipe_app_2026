@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { addDays, startOfWeek, toISODate, today } from '../lib/dates'
+import { getMyHouseholds, type Household } from '../lib/households'
 import {
+  getHouseholdPlan,
   getPlan,
   MEAL_SLOTS,
   planMeal,
@@ -11,6 +14,7 @@ import {
 } from '../lib/mealPlan'
 import { listRecipes } from '../lib/recipes'
 import type { Recipe } from '../types'
+import { ProposalsPanel } from '../components/ProposalsPanel'
 
 const SLOT_RANK: Record<MealSlot, number> = { dinner: 0, breakfast: 1, lunch: 2, snack: 3 }
 const DAY_FMT: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }
@@ -18,10 +22,16 @@ const RANGE_FMT: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
 
 export function MealPlan() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const myId = user?.id ?? ''
+
   const [weekStart, setWeekStart] = useState(() => startOfWeek(today()))
   const [nonce, setNonce] = useState(0)
   const [entries, setEntries] = useState<MealPlanEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const [households, setHouseholds] = useState<Household[]>([])
+  const [view, setView] = useState<'personal' | string>('personal')
 
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
   const [addingDay, setAddingDay] = useState<string | null>(null)
@@ -31,10 +41,28 @@ export function MealPlan() {
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart])
   const todayISO = toISODate(today())
+  const householdId = view === 'personal' ? undefined : view
+  const householdName = households.find((h) => h.id === view)?.name ?? ''
+
+  useEffect(() => {
+    if (!myId) return
+    let active = true
+    getMyHouseholds(myId)
+      .then((hh) => active && setHouseholds(hh))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [myId, nonce])
 
   useEffect(() => {
     let active = true
-    getPlan(toISODate(weekStart), toISODate(weekEnd))
+    const start = toISODate(weekStart)
+    const end = toISODate(weekEnd)
+    const load = householdId
+      ? getHouseholdPlan(householdId, start, end)
+      : getPlan(start, end)
+    load
       .then((rows) => {
         if (!active) return
         setEntries(rows)
@@ -46,17 +74,13 @@ export function MealPlan() {
     return () => {
       active = false
     }
-  }, [weekStart, weekEnd, nonce])
+  }, [weekStart, weekEnd, nonce, householdId])
 
   useEffect(() => {
     let active = true
     listRecipes('')
-      .then((rs) => {
-        if (active) setAllRecipes(rs)
-      })
-      .catch(() => {
-        /* the picker just shows no options */
-      })
+      .then((rs) => active && setAllRecipes(rs))
+      .catch(() => {})
     return () => {
       active = false
     }
@@ -74,7 +98,7 @@ export function MealPlan() {
     if (!addingDay) return
     setBusy(true)
     try {
-      await planMeal(recipeId, addingDay, addSlot)
+      await planMeal(recipeId, addingDay, addSlot, householdId)
       setAddingDay(null)
       reload()
     } catch (e) {
@@ -139,10 +163,41 @@ export function MealPlan() {
         </div>
       </div>
 
+      {households.length > 0 && (
+        <div className="rb-plan-views">
+          <button
+            type="button"
+            className={`rb-unit-toggle__opt${view === 'personal' ? ' is-on' : ''}`}
+            onClick={() => setView('personal')}
+          >
+            Personal
+          </button>
+          {households.map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              className={`rb-unit-toggle__opt${view === h.id ? ' is-on' : ''}`}
+              onClick={() => setView(h.id)}
+            >
+              {h.name}
+            </button>
+          ))}
+          <Link to="/households" className="rb-linklike">
+            Manage
+          </Link>
+        </div>
+      )}
+      {households.length === 0 && (
+        <p className="rb-muted">
+          Plan together — <Link to="/households">create a household</Link> and add your friends.
+        </p>
+      )}
+
       <div className="rb-plan-subhead">
         <p className="rb-muted">
           {weekStart.toLocaleDateString(undefined, RANGE_FMT)} –{' '}
           {weekEnd.toLocaleDateString(undefined, RANGE_FMT)}
+          {householdId ? ` · ${householdName}` : ''}
         </p>
         {(entries?.length ?? 0) > 0 && (
           <button
@@ -187,6 +242,9 @@ export function MealPlan() {
                       >
                         {e.recipe.title}
                       </Link>
+                      {householdId && e.addedByName && (
+                        <span className="rb-muted rb-plan-entry__by">· {e.addedByName}</span>
+                      )}
                       <button
                         type="button"
                         className="rb-icon-button rb-icon-button--sm"
@@ -263,6 +321,17 @@ export function MealPlan() {
             )
           })}
         </ul>
+      )}
+
+      {householdId && (
+        <ProposalsPanel
+          householdId={householdId}
+          weekStartISO={toISODate(weekStart)}
+          days={days}
+          myId={myId}
+          myRecipes={allRecipes}
+          onScheduled={reload}
+        />
       )}
     </div>
   )

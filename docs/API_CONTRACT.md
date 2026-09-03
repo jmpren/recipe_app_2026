@@ -80,16 +80,37 @@ cook), `created_by` forced to `auth.uid()`. Raises on no auth, missing
 **Output:** the created `recipe_riffs` row
 
 ### `plan_meal`
-**Status:** implemented (Phase 2)
+**Status:** implemented (Phase 2; `household_id` added Phase 3)
 **Purpose:** Adds a recipe to a day on the meal calendar (`meal_plan_entries`).
 Exists as a function so `user_id` is forced to `auth.uid()` and `position` is
 appended server-side. `security invoker`.
 **Input:** `recipe_id uuid` (required), `planned_on date` (required),
-`slot text` (default `'dinner'`; must be `breakfast`/`lunch`/`dinner`/`snack`).
-Raises on no auth, missing `recipe_id`/`planned_on`, a bad `slot`, or a
-`recipe_id` the caller can't see.
+`slot text` (default `'dinner'`; must be `breakfast`/`lunch`/`dinner`/`snack`),
+`household_id uuid` (default `null` = personal; when set the caller must be a
+member and `position` is scoped to the household). Raises on no auth, missing
+`recipe_id`/`planned_on`, a bad `slot`, a `recipe_id` the caller can't see, or a
+`household_id` the caller isn't in.
 **Output:** the created `meal_plan_entries` row.
 **Removal / reads** are plain table ops (RLS-scoped), no contract entry.
+
+### `create_household` / `add_household_member` / `propose_meal` / `schedule_proposal`
+**Status:** implemented (Phase 3)
+- **`create_household(name text)` → `households`** — `security definer`; inserts
+  the household and adds the caller as the `owner` member. Raises on no auth /
+  blank name.
+- **`add_household_member(household_id uuid, member_user_id uuid)` →
+  `household_members`** — `security definer`; caller must be the household owner
+  **and** an accepted friend of `member_user_id`. Idempotent.
+- **`propose_meal(household_id uuid, recipe_id uuid, week_start date, note text)`
+  → `meal_proposals`** — `security invoker`; caller must be a member and able to
+  see the recipe. Unique per `(household, recipe, week_start)` — raises `23505`
+  on a repeat.
+- **`schedule_proposal(proposal_id uuid, planned_on date, slot text)` →
+  `meal_plan_entries`** — `security invoker`; creates a household plan entry from
+  the proposal (recipe + household copied over, `user_id` = caller) and deletes
+  the proposal.
+**Voting / leaving / removing / renaming** are plain RLS-scoped table ops on
+`proposal_votes` / `household_members` / `households` — no contract entry.
 
 ### `build_shopping_list`
 **Status:** implemented (Phase 2)

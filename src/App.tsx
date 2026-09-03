@@ -6,6 +6,7 @@ import { CookingMode } from './routes/CookingMode'
 import { FriendRecipes } from './routes/FriendRecipes'
 import { Friends } from './routes/Friends'
 import { Home } from './routes/Home'
+import { Households } from './routes/Households'
 import { Login } from './routes/Login'
 import { Profile } from './routes/Profile'
 import { RecipeCookLog } from './routes/RecipeCookLog'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/shopping" element={<ShoppingList />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/friends/:friendId" element={<FriendRecipes />} />
+          <Route path="/households" element={<Households />} />
           <Route path="/profile" element={<Profile />} />
           {/* /plan was the calendar's old home; it's the home screen now */}
           <Route path="/plan" element={<Navigate to="/" replace />} />
