@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe, listRiffs } from '../lib/recipes'
-import type { RecipeRiff, RecipeWithDetail } from '../types'
+import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
+import type { RecipeIngredient, RecipeRiff, RecipeWithDetail } from '../types'
 
-function formatQuantity(quantity: number | null, unit: string | null): string {
-  return [quantity ?? '', unit ?? ''].join(' ').trim()
-}
+const UNIT_SYSTEMS: UnitSystem[] = ['original', 'metric', 'imperial']
 
 export function RecipeDetail() {
   const { id = '' } = useParams()
@@ -15,6 +14,10 @@ export function RecipeDetail() {
   const [riffsOpen, setRiffsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('original')
+  const [converted, setConverted] = useState<Partial<Record<'metric' | 'imperial', ConvertedAmount[]>>>({})
+  const [convertError, setConvertError] = useState<string | null>(null)
 
   async function handleDelete() {
     if (!window.confirm('Delete this recipe? This can’t be undone.')) return
@@ -35,6 +38,10 @@ export function RecipeDetail() {
         if (!active) return
         setRecipe(r)
         setRiffs(rf)
+        // New recipe -> drop any conversions cached for the previous one.
+        setUnitSystem('original')
+        setConverted({})
+        setConvertError(null)
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : 'Failed to load recipe')
@@ -43,6 +50,29 @@ export function RecipeDetail() {
       active = false
     }
   }, [id])
+
+  // Fetch (once) the converted amounts for the chosen system. Stored data is
+  // never touched — this is display only.
+  useEffect(() => {
+    if (unitSystem === 'original' || converted[unitSystem]) return
+    if (!recipe || recipe.recipe_ingredients.length === 0) return
+    let active = true
+    convertAmounts(
+      recipe.recipe_ingredients.map((i) => ({ quantity: i.quantity, unit: i.unit })),
+      unitSystem,
+    )
+      .then((rows) => {
+        if (active) setConverted((c) => ({ ...c, [unitSystem]: rows }))
+      })
+      .catch((e: unknown) => {
+        if (!active) return
+        setConvertError(e instanceof Error ? e.message : 'Couldn’t convert units')
+        setUnitSystem('original')
+      })
+    return () => {
+      active = false
+    }
+  }, [unitSystem, converted, recipe])
 
   if (error) return <p className="rb-error">{error}</p>
   if (recipe === undefined) return <p className="rb-muted">Loading…</p>
@@ -62,6 +92,14 @@ export function RecipeDetail() {
     recipe.prep_minutes ? `${recipe.prep_minutes} min prep` : null,
     recipe.cook_minutes ? `${recipe.cook_minutes} min cook` : null,
   ].filter(Boolean)
+
+  function ingredientAmount(index: number, ing: RecipeIngredient): string {
+    if (unitSystem !== 'original') {
+      const c = converted[unitSystem]?.[index]
+      if (c) return formatAmount(c.quantity, c.unit)
+    }
+    return formatAmount(ing.quantity, ing.unit)
+  }
 
   return (
     <article className="rb-stack">
@@ -105,16 +143,35 @@ export function RecipeDetail() {
       {recipe.description && <p>{recipe.description}</p>}
 
       <section>
-        <h2>Ingredients</h2>
+        <div className="rb-section-head">
+          <h2>Ingredients</h2>
+          {recipe.recipe_ingredients.length > 0 && (
+            <div className="rb-unit-toggle" role="group" aria-label="Measurement units">
+              {UNIT_SYSTEMS.map((sys) => (
+                <button
+                  key={sys}
+                  type="button"
+                  className={`rb-unit-toggle__opt${unitSystem === sys ? ' is-on' : ''}`}
+                  aria-pressed={unitSystem === sys}
+                  onClick={() => {
+                    setConvertError(null)
+                    setUnitSystem(sys)
+                  }}
+                >
+                  {sys[0].toUpperCase() + sys.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {convertError && <p className="rb-muted">{convertError}</p>}
         {recipe.recipe_ingredients.length === 0 ? (
           <p className="rb-muted">No ingredients listed.</p>
         ) : (
           <ul className="rb-ingredient-list">
-            {recipe.recipe_ingredients.map((ing) => (
+            {recipe.recipe_ingredients.map((ing, i) => (
               <li key={ing.id}>
-                <span className="rb-ingredient-qty">
-                  {formatQuantity(ing.quantity, ing.unit)}
-                </span>{' '}
+                <span className="rb-ingredient-qty">{ingredientAmount(i, ing)}</span>{' '}
                 {ing.name}
                 {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
               </li>

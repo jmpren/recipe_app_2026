@@ -362,6 +362,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_measurement: {
+        Args: { quantity: number; target: string; unit: string }
+        Returns: Json
+      }
+      convert_measurements: {
+        Args: { items: Json; target: string }
+        Returns: Json
+      }
       create_recipe: {
         Args: { payload: Json }
         Returns: {

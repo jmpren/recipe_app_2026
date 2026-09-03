@@ -218,7 +218,8 @@ Explicitly OUT of MVP: meal planning, shopping lists, favorites/repeat-limit log
 metric/imperial conversion, tags, nutrition, friends/social, ads/paid tier.
 
 ### Phase 2 — Personal power features
-- [ ] Metric ⇄ imperial conversion (pure function, low risk once real data exists)
+- [x] Metric ⇄ imperial conversion (`convert_measurement(s)` RPC; Original/Metric/
+      Imperial toggle on the recipe detail ingredient list, display-only)
 - [ ] Inline step notes (the `recipe_steps.note` field, NYT-style)
 - [ ] Toggle: view original vs. current-edit version of a recipe
 - [ ] Serving-size learning: after a few logged cooks, suggest a corrected

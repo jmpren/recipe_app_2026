@@ -86,6 +86,24 @@ it, making it the recipe's new default. The riff itself is preserved.
 **Input:** `riff_id uuid`
 **Output:** the created `recipe_versions` row
 
+### `convert_measurement` / `convert_measurements`
+**Status:** implemented (Phase 2)
+**Purpose:** Metric ⇄ imperial conversion for **display only** — stored
+ingredient amounts are never modified. `immutable`, no table access; lives in
+the DB so the conversion factors and rounding are identical across the web,
+Swift, and React Native clients (PLAN.md §3).
+**`convert_measurement(quantity numeric, unit text, target text)`** →
+`jsonb { quantity, unit, converted }`. `target` is `'metric'` or `'imperial'`
+(anything else raises `22023`). A null `quantity` or an unrecognised / non-unit
+`unit` (e.g. `clove`, `pinch`, empty) is returned unchanged with
+`converted: false`. Known units: volume (`tsp`/`tbsp`/`cup`/`fl oz`/`pint`/
+`quart`/`gallon`/`ml`/`l` + plurals/abbreviations) and weight (`oz`/`lb`/`g`/
+`kg` + plurals). Metric output is `ml`/`l` or `g`/`kg`; imperial output is
+`tsp`/`tbsp`/`cup` or `oz`/`lb`, rounded to the nearest ⅛.
+**`convert_measurements(items jsonb, target text)`** → `jsonb` array. Maps the
+scalar over `[{ quantity, unit }, …]`, preserving order, so a whole ingredient
+list converts in one call.
+
 ### `suggest_meals`
 **Status:** planned (Phase 2)
 **Purpose:** Returns candidate recipes for meal planning, applying favorites-bias

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { loadCookProgress, saveCookProgress } from '../lib/cookProgress'
 import { getRecipe } from '../lib/recipes'
+import { formatAmount } from '../lib/units'
 import { useWakeLock } from '../lib/useWakeLock'
 import type { RecipeWithDetail } from '../types'
 
@@ -23,10 +24,6 @@ function beep() {
   } catch {
     // ignore
   }
-}
-
-function formatQuantity(quantity: number | null, unit: string | null): string {
-  return [quantity ?? '', unit ?? ''].join(' ').trim()
 }
 
 function mmss(totalSeconds: number): string {
@@ -195,7 +192,7 @@ export function CookingMode() {
             <ul className="rb-cook-ingredient-list">
               {recipe.recipe_ingredients.map((ing) => (
                 <li key={ing.id}>
-                  <span className="rb-ingredient-qty">{formatQuantity(ing.quantity, ing.unit)}</span>{' '}
+                  <span className="rb-ingredient-qty">{formatAmount(ing.quantity, ing.unit)}</span>{' '}
                   {ing.name}
                   {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}
                 </li>
@@ -273,7 +270,7 @@ export function CookingMode() {
                 {recipe.recipe_ingredients.map((ing) => (
                   <li key={ing.id}>
                     <span className="rb-ingredient-qty">
-                      {formatQuantity(ing.quantity, ing.unit)}
+                      {formatAmount(ing.quantity, ing.unit)}
                     </span>{' '}
                     {ing.name}
                     {ing.notes && <span className="rb-muted"> — {ing.notes}</span>}

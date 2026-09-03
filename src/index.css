@@ -457,6 +457,45 @@ textarea.rb-field {
   font-weight: 550;
 }
 
+.rb-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rb-section-head h2 {
+  margin: 0;
+}
+
+.rb-unit-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  align-self: center;
+}
+
+.rb-unit-toggle__opt {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 12px;
+  color: var(--ink-soft);
+  background: var(--paper-raised);
+  border: 0;
+  cursor: pointer;
+}
+
+.rb-unit-toggle__opt + .rb-unit-toggle__opt {
+  border-left: 1px solid var(--line);
+}
+
+.rb-unit-toggle__opt.is-on {
+  color: var(--paper-raised);
+  background: var(--sage);
+}
+
 .rb-step-list {
   padding-left: 22px;
   display: flex;
