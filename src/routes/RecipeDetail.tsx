@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StepNoteEditor } from '../components/StepNoteEditor'
 import { predictedServings, type ServingsSuggestion } from '../lib/cooks'
-import { deleteRecipe, getRecipe, listRiffs, listVersions, setStepNote } from '../lib/recipes'
+import {
+  deleteRecipe,
+  getRecipe,
+  listRiffs,
+  listVersions,
+  setRecipeServings,
+  setStepNote,
+} from '../lib/recipes'
 import { convertAmounts, formatAmount, type ConvertedAmount, type UnitSystem } from '../lib/units'
 import type { RecipeIngredient, RecipeRiff, RecipeVersionSummary, RecipeWithDetail } from '../types'
 
@@ -136,6 +143,16 @@ export function RecipeDetail() {
     return formatAmount(ing.quantity, ing.unit)
   }
 
+  async function applySuggestedServings(n: number) {
+    try {
+      await setRecipeServings(id, n)
+      setRecipe((r) => (r ? { ...r, servings: n } : r))
+      setServingsHint(null)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Couldn’t update servings')
+    }
+  }
+
   async function saveStepNote(stepId: string, note: string) {
     await setStepNote(stepId, note)
     setRecipe((r) =>
@@ -172,7 +189,14 @@ export function RecipeDetail() {
             Your {servingsHint.basedOnCooks} logged cooks average about{' '}
             {servingsHint.suggestedServings} servings
             {recipe.servings != null ? `, not the ${recipe.servings} set here` : ''}.{' '}
-            <Link to={`/recipes/${recipe.id}/edit`}>Adjust the default</Link>
+            <button
+              type="button"
+              className="rb-linklike"
+              onClick={() => applySuggestedServings(servingsHint.suggestedServings)}
+            >
+              Update to {servingsHint.suggestedServings}
+            </button>{' '}
+            · <Link to={`/recipes/${recipe.id}/edit`}>edit</Link>
           </p>
         )}
       </header>

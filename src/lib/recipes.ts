@@ -119,6 +119,22 @@ export async function createRiff(
  * annotations, not a permanent edit, so they never create a recipe_versions row
  * (PLAN.md §5 / §7). RLS scopes the update to the owner.
  */
+/**
+ * Set `recipes.servings` directly (used by the serving-size-learning nudge).
+ * A plain column write, NOT update_recipe: correcting the default from cook
+ * history is reconciling metadata, not a recipe revision, so it never creates a
+ * recipe_versions row. RLS scopes it to the owner.
+ */
+export async function setRecipeServings(recipeId: string, servings: number): Promise<void> {
+  const { data, error } = await supabase
+    .from('recipes')
+    .update({ servings, updated_at: new Date().toISOString() })
+    .eq('id', recipeId)
+    .select('id')
+  if (error) throw error
+  if (!data || data.length === 0) throw new Error('That recipe no longer exists.')
+}
+
 export async function setStepNote(stepId: string, note: string): Promise<void> {
   const { data, error } = await supabase
     .from('recipe_steps')

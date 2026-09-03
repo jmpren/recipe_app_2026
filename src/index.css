@@ -548,6 +548,17 @@ textarea.rb-field {
   color: var(--ink-soft);
 }
 
+.rb-linklike {
+  font: inherit;
+  color: var(--sage);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .rb-suggest-controls {
   display: flex;
   gap: 14px;
